@@ -18,6 +18,10 @@ function sbHeaders() {
   };
 }
 
+// Table names (prefixed to avoid conflict with other projects)
+const TB_CHAPTERS = 'ef_chapters';
+const TB_SETTINGS = 'ef_settings';
+
 async function sbSelect(table, query) {
   const url = `${SUPABASE_URL}/rest/v1/${table}${query ? '?' + query : ''}`;
   const r = await fetch(url, { headers: sbHeaders() });
@@ -118,9 +122,9 @@ module.exports = async function handler(req, res) {
     if (action === 'read') {
       if (sbReady()) {
         try {
-          const data = await sbSelect('chapters', 'order=id');
+          const data = await sbSelect(TB_CHAPTERS, 'order=id');
           if (data && data.length > 0) {
-            const settingsData = await sbSelect('settings');
+            const settingsData = await sbSelect(TB_SETTINGS);
             const settingsObj = {};
             (settingsData || []).forEach(s => { settingsObj[s.key] = s.value; });
             return res.status(200).json({ chapters: data, settings: settingsObj, source: 'supabase' });
@@ -142,14 +146,14 @@ module.exports = async function handler(req, res) {
       if (sbReady()) {
         try {
           for (const ch of chapters) {
-            await sbUpsert('chapters', {
+            await sbUpsert(TB_CHAPTERS, {
               id: ch.id, name: ch.name, icon: ch.icon,
               songs: ch.songs || [], updated_at: new Date().toISOString(),
             });
           }
           if (settings) {
             for (const [key, value] of Object.entries(settings)) {
-              await sbUpsert('settings', { key, value, updated_at: new Date().toISOString() });
+              await sbUpsert(TB_SETTINGS, { key, value, updated_at: new Date().toISOString() });
             }
           }
         } catch (e) {
