@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About Dr. Ibrahim El-Feki — Human Development Pioneer</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  .about-hero { padding: calc(var(--header-height) + 60px) 20px 40px; text-align: center; background: var(--bg-secondary); border-bottom: 1px solid var(--border); }
+  .about-hero h1 { font-size: 2.4rem; font-weight: 900; margin-bottom: 8px; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .about-hero p { color: var(--text-secondary); font-size: 1.1rem; }
+  .about-content { max-width: 800px; margin: 0 auto; padding: 40px 20px 80px; }
+  .about-section { margin-bottom: 40px; }
+  .about-section h2 { font-size: 1.4rem; margin-bottom: 12px; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+  .about-section p { color: var(--text-secondary); line-height: 1.8; margin-bottom: 12px; }
+  .about-section ul { list-style: none; padding: 0; }
+  .about-section li { padding: 8px 0; padding-left: 24px; position: relative; color: var(--text-secondary); }
+  .about-section li::before { content: '✦'; position: absolute; left: 0; color: var(--accent); }
+  .quote-box { background: var(--accent-light); border-right: 4px solid var(--accent); padding: 20px 24px; border-radius: 0 var(--radius-md) var(--radius-md) 0; margin: 20px 0; font-style: italic; color: var(--text-primary); }
+  .courses-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 16px; }
+  .course-chip { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; text-align: center; transition: 0.2s; }
+  .course-chip:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .course-chip .icon { font-size: 1.5rem; display: block; margin-bottom: 6px; }
+  .course-chip .name { font-weight: 700; font-size: 0.85rem; }
+</style>
+</head>
+<body>
+<header class="header" id="header">
+  <div class="container nav-inner">
+    <a href="index.html" class="logo"><span class="logo-icon">📖</span><span class="logo-text">Dr. El-Feki</span></a>
+    <nav style="display:flex;gap:24px">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="about.html" class="nav-link active">About</a>
+      <a href="contact.html" class="nav-link">Contact</a>
+    </nav>
+    <div class="nav-actions">
+      <button id="themeToggle">🌙</button>
+    </div>
+  </div>
+</header>
+
+<section class="about-hero">
+  <div style="font-size:4rem;margin-bottom:16px">📖</div>
+  <h1>Dr. Ibrahim El-Feki</h1>
+  <p>A Pioneer of Human Development in the Arab World</p>
+  <p style="color:var(--text-muted);font-size:0.9rem;margin-top:8px">إبراهيم الفقي — رحمه الله</p>
+</section>
+
+<div class="about-content">
+  <div class="about-section">
+    <h2>🌟 Who Was Dr. Ibrahim El-Feki?</h2>
+    <p>Dr. Ibrahim El-Feki was one of the most influential human development speakers in the Arab world. Born in Egypt, he dedicated his life to teaching people how to improve themselves, manage their time, think positively, and achieve their goals.</p>
+    <p>His lectures, books, and training programs have touched the lives of millions of people across the Middle East and beyond. He was known for his simple, powerful way of delivering complex ideas that anyone could understand and apply.</p>
+  </div>
+
+  <div class="about-section">
+    <h2>💡 His Philosophy</h2>
+    <div class="quote-box">
+      "The mind is like a garden — if you don't plant good thoughts, weeds of negativity will grow instead."
+    </div>
+    <p>Dr. El-Feki believed that every human being has unlimited potential waiting to be unlocked. His teachings focused on:</p>
+    <ul>
+      <li><strong>Positive Thinking</strong> — Transforming your mindset to see opportunities instead of obstacles</li>
+      <li><strong>Time Management</strong> — Making every moment count and setting clear priorities</li>
+      <li><strong>Self-Improvement</strong> — Continuous learning through reading, reflection, and constructive criticism</li>
+      <li><strong>Goal Setting</strong> — Defining clear goals and persisting until they are achieved</li>
+      <li><strong>Communication</strong> — Building meaningful relationships through active listening and clear expression</li>
+      <li><strong>Willpower & Determination</strong> — Developing the inner strength to overcome any challenge</li>
+    </ul>
+  </div>
+
+  <div class="about-section">
+    <h2>📚 His Courses</h2>
+    <p>This podcast series brings together his most important teachings in an easy-to-listen format:</p>
+    <div class="courses-list">
+      <div class="course-chip"><span class="icon">☀️</span><span class="name">Positive Thinking</span></div>
+      <div class="course-chip"><span class="icon">⏳</span><span class="name">Time is Precious</span></div>
+      <div class="course-chip"><span class="icon">🚀</span><span class="name">Self-Improvement</span></div>
+      <div class="course-chip"><span class="icon">🎯</span><span class="name">Goals to Achieve</span></div>
+      <div class="course-chip"><span class="icon">💬</span><span class="name">Art of Communication</span></div>
+      <div class="course-chip"><span class="icon">📖</span><span class="name">Biography</span></div>
+    </div>
+  </div>
+
+  <div class="about-section">
+    <h2>🌍 His Legacy</h2>
+    <p>Dr. Ibrahim El-Feki passed away, but his teachings live on. His message of self-belief, hard work, and positive thinking continues to inspire new generations.</p>
+    <p>This podcast series is a tribute to his legacy — making his wisdom accessible to everyone, anywhere, anytime.</p>
+    <div class="quote-box">
+      "رحمه الله — May God have mercy on his soul. His words continue to light the way for millions."
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:40px">
+    <a href="index.html" class="btn btn-primary" style="font-size:1rem;padding:14px 32px">🎧 Start Listening →</a>
+  </div>
+</div>
+
+<footer class="footer">
+  <p>📖 Dr. Ibrahim El-Feki — Human Development Series</p>
+  <p style="margin-top:4px">In loving memory — رحمه الله</p>
+</footer>
+
+<script src="config.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('elfeki_theme');
+  const dark = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('elfeki_theme', next);
+  });
+});
+</script>
+</body>
+</html>

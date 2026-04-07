@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dr. Ibrahim El-Feki — Human Development Podcast</title>
+<meta name="description" content="The complete human development podcast series by Dr. Ibrahim El-Feki. Self-improvement, positive thinking, time management, and more.">
+<meta name="robots" content="index, follow">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header" id="header">
+  <div class="container nav-inner">
+    <a href="index.html" class="logo">
+      <span class="logo-icon">📖</span>
+      <span class="logo-text">Dr. El-Feki</span>
+    </a>
+    <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+    <ul class="nav-links" id="navMenu">
+      <li><a href="index.html" class="nav-link active">Home</a></li>
+      <li><a href="about.html" class="nav-link">About</a></li>
+      <li><a href="contact.html" class="nav-link">Contact</a></li>
+    </ul>
+    <div class="nav-actions">
+      <button id="themeToggle">🌙</button>
+      <a href="admin.html" class="btn btn-primary btn-sm">🔐 Admin</a>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-content">
+    <h1>Dr. Ibrahim El-Feki</h1>
+    <p>The complete human development series — wisdom from one of the greatest motivational speakers in the Arab world. Self-improvement, positive thinking, and life-changing lessons.</p>
+    <div class="hero-badges">
+      <div class="badge">📚 <span class="num" id="chCount">6</span> Courses</div>
+      <div class="badge">🎙️ <span class="num" id="epCount">30</span> Episodes</div>
+      <div class="badge">🌍 <span class="num">Free</span> Access</div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="features-grid">
+    <div class="feature-card animate-on-scroll">
+      <div class="feature-icon">💡</div>
+      <h3>Positive Thinking</h3>
+      <p>Transform your mindset and unlock the power of positive thoughts in your daily life.</p>
+    </div>
+    <div class="feature-card animate-on-scroll">
+      <div class="feature-icon">⏳</div>
+      <h3>Time Management</h3>
+      <p>Learn to value your time, set priorities, and achieve work-life balance.</p>
+    </div>
+    <div class="feature-card animate-on-scroll">
+      <div class="feature-icon">🚀</div>
+      <h3>Self-Improvement</h3>
+      <p>Build willpower, develop reading habits, and embrace constructive criticism.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CHAPTERS -->
+<section class="chapters-section" id="chapters">
+  <div class="container">
+    <h2 class="section-title">📚 All Courses</h2>
+    <p class="section-sub">Select a course to explore its episodes</p>
+    <div class="chapters-grid" id="chaptersGrid">
+      <p style="text-align:center;color:var(--text-muted);grid-column:1/-1;padding:40px">Loading courses...</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <h2>📖 About Dr. Ibrahim El-Feki</h2>
+  <p>A legendary figure in human development — his lessons continue to inspire millions.</p>
+  <a href="about.html" class="btn btn-primary">Read Biography →</a>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <p>📖 Dr. Ibrahim El-Feki — Human Development Series</p>
+  <p style="margin-top:4px">In loving memory — رحمه الله</p>
+</footer>
+
+<!-- NOW PLAYING -->
+<div class="np-bar">
+  <img id="npImg" style="display:none">
+  <div class="np-info">
+    <div class="np-title" id="npTitle"></div>
+    <div class="np-sub" id="npSub"></div>
+  </div>
+  <div class="np-controls">
+    <button onclick="prevSong()">⏮</button>
+    <button onclick="togglePlay()" id="playBtn">▶</button>
+    <button onclick="nextSong()">⏭</button>
+    <button onclick="closePlayer()">✕</button>
+  </div>
+  <div class="np-progress" onclick="seekAudio(event)"><div class="np-fill" id="npFill"></div></div>
+</div>
+
+<audio id="player"></audio>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    const ch = DB.getChapters();
+    document.getElementById('chCount').textContent = ch.length;
+    document.getElementById('epCount').textContent = ch.reduce((s, c) => s + (c.songs?.length || 0), 0);
+  }, 500);
+});
+</script>
+</body>
+</html>

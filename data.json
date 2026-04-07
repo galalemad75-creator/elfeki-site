@@ -1,0 +1,65 @@
+{
+  "chapters": [
+    {
+      "id": 1, "name": "Positive Thinking", "icon": "☀️",
+      "songs": [
+        { "id": 1, "title": "The Essence of Positive Thinking", "audio": "", "created": "2026-04-08" },
+        { "id": 2, "title": "Transforming Lives with Positivity", "audio": "", "created": "2026-04-08" },
+        { "id": 3, "title": "Techniques for Positive Thoughts", "audio": "", "created": "2026-04-08" },
+        { "id": 4, "title": "Overcoming Negative Thoughts", "audio": "", "created": "2026-04-08" },
+        { "id": 5, "title": "The Power of Self-Motivation", "audio": "", "created": "2026-04-08" },
+        { "id": 6, "title": "Power of Positive Thinking", "audio": "", "created": "2026-04-08" }
+      ]
+    },
+    {
+      "id": 2, "name": "Time is Precious", "icon": "⏳",
+      "songs": [
+        { "id": 7, "title": "Value of Time", "audio": "", "created": "2026-04-08" },
+        { "id": 8, "title": "Setting Priorities", "audio": "", "created": "2026-04-08" },
+        { "id": 9, "title": "Effective Planning Techniques", "audio": "", "created": "2026-04-08" },
+        { "id": 10, "title": "Time Management at Work", "audio": "", "created": "2026-04-08" },
+        { "id": 11, "title": "Balancing Work and Life", "audio": "", "created": "2026-04-08" },
+        { "id": 12, "title": "Time is Precious", "audio": "", "created": "2026-04-08" }
+      ]
+    },
+    {
+      "id": 3, "name": "Self-Improvement Journey", "icon": "🚀",
+      "songs": [
+        { "id": 13, "title": "1-Understanding Self-Improvement", "audio": "", "created": "2026-04-08" },
+        { "id": 14, "title": "2-Setting Personal Goals", "audio": "", "created": "2026-04-08" },
+        { "id": 15, "title": "3-Power of Reading", "audio": "", "created": "2026-04-08" },
+        { "id": 16, "title": "4-Role of Constructive Criticism", "audio": "", "created": "2026-04-08" },
+        { "id": 17, "title": "5-Strength of Will and Determination", "audio": "", "created": "2026-04-08" },
+        { "id": 18, "title": "6-Self-Improvement Journey", "audio": "", "created": "2026-04-08" }
+      ]
+    },
+    {
+      "id": 4, "name": "Goals to Achieve", "icon": "🎯",
+      "songs": [
+        { "id": 19, "title": "Importance of Setting Goals", "audio": "", "created": "2026-04-08" },
+        { "id": 20, "title": "Achieving Short-Term Goals", "audio": "", "created": "2026-04-08" },
+        { "id": 21, "title": "Persistence in Achieving Goals", "audio": "", "created": "2026-04-08" },
+        { "id": 22, "title": "Facing Obstacles in Goal Achievement", "audio": "", "created": "2026-04-08" },
+        { "id": 23, "title": "Celebrating Achievements", "audio": "", "created": "2026-04-08" },
+        { "id": 24, "title": "Goals to Achieve", "audio": "", "created": "2026-04-08" }
+      ]
+    },
+    {
+      "id": 5, "name": "Art of Communication", "icon": "💬",
+      "songs": [
+        { "id": 25, "title": "Skills of Active Listening", "audio": "", "created": "2026-04-08" },
+        { "id": 26, "title": "Expressing Yourself Clearly", "audio": "", "created": "2026-04-08" },
+        { "id": 27, "title": "The Role of Body Language", "audio": "", "created": "2026-04-08" },
+        { "id": 28, "title": "Effective Communication at Work", "audio": "", "created": "2026-04-08" },
+        { "id": 29, "title": "Building Positive Relationships", "audio": "", "created": "2026-04-08" },
+        { "id": 30, "title": "Art of Communication", "audio": "", "created": "2026-04-08" }
+      ]
+    },
+    {
+      "id": 6, "name": "Biography of Dr. Ibrahim El-Feki", "icon": "📖",
+      "songs": []
+    }
+  ],
+  "nextId": { "chapter": 7, "song": 31 },
+  "admin": { "email": "", "password": "" }
+}
