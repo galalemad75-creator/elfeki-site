@@ -6,6 +6,21 @@
 <title>Dr. Ibrahim El-Feki — Human Development Podcast</title>
 <meta name="description" content="The complete human development podcast series by Dr. Ibrahim El-Feki. Self-improvement, positive thinking, time management, and more.">
 <meta name="robots" content="index, follow">
+<link rel="canonical" href="https://elfeki-site.vercel.app/index.html">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Dr. Ibrahim El-Feki — Human Development Podcast">
+<meta property="og:description" content="The complete human development series — wisdom from one of the greatest motivational speakers in the Arab world.">
+<meta property="og:url" content="https://elfeki-site.vercel.app/index.html">
+<meta property="og:site_name" content="Dr. El-Feki Podcast">
+<meta property="og:image" content="https://elfeki-site.vercel.app/og-image.png">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Dr. Ibrahim El-Feki — Human Development Podcast">
+<meta name="twitter:description" content="The complete human development series — wisdom from one of the greatest motivational speakers in the Arab world.">
+
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -90,6 +105,11 @@
 <footer class="footer">
   <p>📖 Dr. Ibrahim El-Feki — Human Development Series</p>
   <p style="margin-top:4px">In loving memory — رحمه الله</p>
+  <nav style="display:flex;gap:16px;justify-content:center;margin-top:12px;font-size:0.8rem">
+    <a href="privacy.html">Privacy Policy</a>
+    <a href="terms.html">Terms of Service</a>
+    <a href="contact.html">Contact</a>
+  </nav>
 </footer>
 
 <!-- NOW PLAYING -->
@@ -109,6 +129,33 @@
 </div>
 
 <audio id="player"></audio>
+
+<!-- Cookie Consent Banner -->
+<div class="cookie-banner" id="cookieBanner">
+  <p>🍪 We use cookies to improve your experience and show relevant ads. By continuing to use this site, you agree to our <a href="privacy.html">Privacy Policy</a>.</p>
+  <button class="cookie-btn" onclick="acceptCookies()">Accept</button>
+  <button class="cookie-btn cookie-btn-secondary" onclick="declineCookies()">Decline</button>
+</div>
+
+<!-- JSON-LD Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Dr. Ibrahim El-Feki — Human Development Podcast",
+  "url": "https://elfeki-site.vercel.app/",
+  "description": "The complete human development podcast series by Dr. Ibrahim El-Feki. Self-improvement, positive thinking, time management, and more.",
+  "author": {
+    "@type": "Person",
+    "name": "Dr. Ibrahim El-Feki"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Dr. El-Feki Podcast",
+    "url": "https://elfeki-site.vercel.app/"
+  }
+}
+</script>
 
 <script src="config.js"></script>
 <script src="app.js"></script>

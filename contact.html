@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Contact — Dr. El-Feki Podcast</title>
+<meta name="description" content="Contact us for questions, suggestions, or feedback about the Dr. Ibrahim El-Feki Human Development Podcast.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://elfeki-site.vercel.app/contact.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Contact — Dr. El-Feki Podcast">
+<meta property="og:description" content="Have a question or suggestion? We'd love to hear from you.">
+<meta property="og:url" content="https://elfeki-site.vercel.app/contact.html">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -42,18 +49,22 @@
   <h1>📬 Contact Us</h1>
   <p class="sub">Have a question or suggestion? We'd love to hear from you.</p>
   <div class="contact-card">
-    <form onsubmit="handleSubmit(event)">
+    <form action="https://formsubmit.co/galalemad75@gmail.com" method="POST">
+      <input type="hidden" name="_subject" value="New message from Dr. El-Feki Website">
+      <input type="hidden" name="_captcha" value="false">
+      <input type="hidden" name="_template" value="table">
+      <input type="hidden" name="_next" value="https://elfeki-site.vercel.app/contact.html?sent=1">
       <div class="form-group">
         <label>Your Name</label>
-        <input type="text" required placeholder="Enter your name">
+        <input type="text" name="name" required placeholder="Enter your name">
       </div>
       <div class="form-group">
         <label>Your Email</label>
-        <input type="email" required placeholder="Enter your email">
+        <input type="email" name="email" required placeholder="Enter your email">
       </div>
       <div class="form-group">
         <label>Message</label>
-        <textarea required placeholder="Write your message here..."></textarea>
+        <textarea name="message" required placeholder="Write your message here..."></textarea>
       </div>
       <button type="submit" class="submit-btn">📤 Send Message</button>
     </form>
@@ -63,6 +74,16 @@
 <footer class="footer">
   <p>📖 Dr. Ibrahim El-Feki — Human Development Series</p>
   <p style="margin-top:4px">In loving memory — رحمه الله</p>
+</footer>
+
+<footer class="footer">
+  <p>📖 Dr. Ibrahim El-Feki — Human Development Series</p>
+  <p style="margin-top:4px">In loving memory — رحمه الله</p>
+  <nav style="display:flex;gap:16px;justify-content:center;margin-top:12px;font-size:0.8rem">
+    <a href="privacy.html">Privacy Policy</a>
+    <a href="terms.html">Terms of Service</a>
+    <a href="contact.html">Contact</a>
+  </nav>
 </footer>
 
 <script src="config.js"></script>
@@ -76,12 +97,17 @@ document.addEventListener('DOMContentLoaded', () => {
     document.documentElement.setAttribute('data-theme', next);
     localStorage.setItem('elfeki_theme', next);
   });
+
+  // Show success message if redirected after form submit
+  if (new URLSearchParams(window.location.search).get('sent') === '1') {
+    const card = document.querySelector('.contact-card');
+    if (card) {
+      card.innerHTML = '<div style="text-align:center;padding:40px 20px"><div style="font-size:3rem;margin-bottom:16px">✅</div><h2 style="margin-bottom:8px">Thank You!</h2><p style="color:var(--text-secondary)">Your message has been sent successfully. We\'ll get back to you soon.</p></div>';
+    }
+    // Clean URL
+    history.replaceState(null, '', 'contact.html');
+  }
 });
-function handleSubmit(e) {
-  e.preventDefault();
-  alert('Thank you for your message! We will get back to you soon.');
-  e.target.reset();
-}
 </script>
 </body>
 </html>

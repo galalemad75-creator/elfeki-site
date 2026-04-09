@@ -12,7 +12,28 @@ document.addEventListener('DOMContentLoaded', () => {
   initNav();
   initScrollAnimations();
   initChapters();
+  initCookieBanner();
 });
+
+// ═══ Cookie Consent ═══
+function initCookieBanner() {
+  const consent = localStorage.getItem('elfeki_cookie_consent');
+  if (!consent) {
+    setTimeout(() => {
+      document.getElementById('cookieBanner')?.classList.add('show');
+    }, 2000);
+  }
+}
+
+function acceptCookies() {
+  localStorage.setItem('elfeki_cookie_consent', 'accepted');
+  document.getElementById('cookieBanner')?.classList.remove('show');
+}
+
+function declineCookies() {
+  localStorage.setItem('elfeki_cookie_consent', 'declined');
+  document.getElementById('cookieBanner')?.classList.remove('show');
+}
 
 function initTheme() {
   const saved = localStorage.getItem('elfeki_theme');
