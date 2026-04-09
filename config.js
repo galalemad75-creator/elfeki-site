@@ -30,7 +30,24 @@ const DB = {
         this._source = 'empty';
       }
     } catch (e) {
-      console.warn('DB init error:', e.message);
+      console.warn('DB init error, trying local data.json:', e.message);
+      // Fallback: read data.json directly (for GitHub Pages / static hosting)
+      try {
+        const r = await fetch('data.json?t=' + Date.now());
+        if (r.ok) {
+          const data = await r.json();
+          this._cache = {
+            chapters: data.chapters || [],
+            nextId: data.nextId || { chapter: 7, song: 31 },
+            admin: data.admin || { email: '', password: '' },
+          };
+          this._source = 'local';
+          localStorage.setItem('elfeki_cache', JSON.stringify(this._cache));
+          return this._cache;
+        }
+      } catch (e2) {
+        console.warn('Local data.json also failed:', e2.message);
+      }
       this._cache = { chapters: [], nextId: { chapter: 7, song: 31 }, admin: { email: '', password: '' } };
       this._source = 'fallback';
     }
