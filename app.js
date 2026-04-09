@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initScrollAnimations();
   initChapters();
   initCookieBanner();
+  initAds();
 });
 
 // ═══ Cookie Consent ═══
@@ -33,6 +34,61 @@ function acceptCookies() {
 function declineCookies() {
   localStorage.setItem('elfeki_cookie_consent', 'declined');
   document.getElementById('cookieBanner')?.classList.remove('show');
+}
+
+// ═══ Ad Rendering ═══
+function initAds() {
+  try {
+    const ads = JSON.parse(localStorage.getItem('elfeki_ads') || '{}');
+    if (!ads.publisherId && !ads.headerCode && !ads.bodyCode) return;
+
+    // Inject header ad code
+    if (ads.headerCode) {
+      const div = document.createElement('div');
+      div.innerHTML = ads.headerCode;
+      document.head.appendChild(div);
+    }
+
+    // Inject AdSense script if publisher ID exists
+    if (ads.publisherId) {
+      const s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + ads.publisherId;
+      s.crossOrigin = 'anonymous';
+      document.head.appendChild(s);
+    }
+
+    // Show and configure ad slots
+    const slots = [
+      { id: 'ad-slot-1', slot: ads.slot1 },
+      { id: 'ad-slot-2', slot: ads.slot2 },
+      { id: 'ad-slot-3', slot: ads.slot3 },
+    ];
+    slots.forEach(({ id, slot }) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (slot && ads.publisherId) {
+        const ins = el.querySelector('.adsbygoogle');
+        if (ins) {
+          ins.setAttribute('data-ad-client', ads.publisherId);
+          ins.setAttribute('data-ad-slot', slot);
+        }
+        el.style.display = 'block';
+        try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
+      }
+    });
+
+    // Show body ad code
+    if (ads.bodyCode) {
+      const slot1 = document.getElementById('ad-slot-1');
+      if (slot1) {
+        slot1.innerHTML = ads.bodyCode;
+        slot1.style.display = 'block';
+      }
+    }
+  } catch (e) {
+    console.warn('Ad init error:', e);
+  }
 }
 
 function initTheme() {

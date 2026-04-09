@@ -154,6 +154,7 @@
     <button class="tab active" data-tab="chapters">📚 Courses</button>
     <button class="tab" data-tab="upload">🎵 Upload</button>
     <button class="tab" data-tab="settings">⚙️ Settings</button>
+    <button class="tab" data-tab="ads">📢 Ads</button>
   </div>
 
   <div class="panel active" id="p-chapters">
@@ -229,6 +230,53 @@ CREATE POLICY "Allow all" ON settings FOR ALL USING (true) WITH CHECK (true);</p
       <h3>🗑️ Reset All Data</h3>
       <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:12px">Delete everything and go back to defaults.</p>
       <button class="btn-s red" onclick="resetData()">⚠️ Reset</button>
+    </div>
+  </div>
+
+  <div class="panel" id="p-ads">
+    <div class="form-card">
+      <h3>📢 Google AdSense Setup</h3>
+      <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:16px">
+        Add your Google AdSense code to show ads on the site. Get your code from <a href="https://www.google.com/adsense" target="_blank" style="color:var(--accent)">Google AdSense</a>.
+      </p>
+      <div class="form-group" style="margin-bottom:16px">
+        <label>AdSense Publisher ID</label>
+        <input type="text" id="adsenseId" placeholder="ca-pub-XXXXXXXXXXXXXXXX" style="width:100%;padding:12px;background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.95rem">
+      </div>
+      <div class="form-group" style="margin-bottom:16px">
+        <label>Ad Slot ID (Horizontal Banner)</label>
+        <input type="text" id="adSlot1" placeholder="e.g. 1234567890" style="width:100%;padding:12px;background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.95rem">
+        <small style="color:var(--text-muted)">Displays between hero and chapters sections</small>
+      </div>
+      <div class="form-group" style="margin-bottom:16px">
+        <label>Ad Slot ID (In-Feed)</label>
+        <input type="text" id="adSlot2" placeholder="e.g. 0987654321" style="width:100%;padding:12px;background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.95rem">
+        <small style="color:var(--text-muted)">Displays after chapter list</small>
+      </div>
+      <div class="form-group" style="margin-bottom:16px">
+        <label>Ad Slot ID (Sidebar / Footer)</label>
+        <input type="text" id="adSlot3" placeholder="e.g. 5678901234" style="width:100%;padding:12px;background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.95rem">
+        <small style="color:var(--text-muted)">Displays in footer area</small>
+      </div>
+      <button class="btn-s green" onclick="saveAds()" style="margin-top:8px">💾 Save Ad Settings</button>
+      <button class="btn-s" onclick="clearAds()" style="margin-top:8px;margin-left:8px">🗑️ Clear All</button>
+    </div>
+    <div class="form-card">
+      <h3>📋 Custom Ad Code (Advanced)</h3>
+      <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:12px">
+        Paste any ad code directly (AdSense manual, Ad Manager, etc.). This will be injected into the page.
+      </p>
+      <div class="form-group" style="margin-bottom:16px">
+        <label>Header Ad Code</label>
+        <textarea id="adHeaderCode" rows="4" placeholder="<script>...ad code...</script>" style="width:100%;padding:12px;background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:monospace;font-size:0.85rem;resize:vertical"></textarea>
+        <small style="color:var(--text-muted)">Injected in &lt;head&gt; of all pages</small>
+      </div>
+      <div class="form-group" style="margin-bottom:16px">
+        <label>Body Ad Code (Banner)</label>
+        <textarea id="adBodyCode" rows="4" placeholder="<ins class='adsbygoogle'...></ins>" style="width:100%;padding:12px;background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:monospace;font-size:0.85rem;resize:vertical"></textarea>
+        <small style="color:var(--text-muted)">Shows between hero and chapters</small>
+      </div>
+      <button class="btn-s green" onclick="saveCustomAds()">💾 Save Custom Code</button>
     </div>
   </div>
 </div>
@@ -329,7 +377,7 @@ async function showDashboard() {
   toast('⏳ Loading & syncing...', 'info');
   try { await DB.init(); } catch(e) { console.warn('DB init:', e); }
   chapters = DB.getChapters();
-  renderStats(); renderChapters(); populateSelect();
+  renderStats(); renderChapters(); populateSelect(); loadAds();
   toast('✅ Data loaded!', 'success');
 }
 
@@ -482,6 +530,58 @@ async function resetData() {
   if (!confirm('Last chance!')) return;
   localStorage.removeItem('elfeki_cache');
   location.reload();
+}
+
+// ═══ Ad Management ═══
+function loadAds() {
+  const ads = JSON.parse(localStorage.getItem('elfeki_ads') || '{}');
+  document.getElementById('adsenseId').value = ads.publisherId || '';
+  document.getElementById('adSlot1').value = ads.slot1 || '';
+  document.getElementById('adSlot2').value = ads.slot2 || '';
+  document.getElementById('adSlot3').value = ads.slot3 || '';
+  document.getElementById('adHeaderCode').value = ads.headerCode || '';
+  document.getElementById('adBodyCode').value = ads.bodyCode || '';
+}
+
+function saveAds() {
+  const ads = {
+    publisherId: document.getElementById('adsenseId').value.trim(),
+    slot1: document.getElementById('adSlot1').value.trim(),
+    slot2: document.getElementById('adSlot2').value.trim(),
+    slot3: document.getElementById('adSlot3').value.trim(),
+    headerCode: (JSON.parse(localStorage.getItem('elfeki_ads') || '{}')).headerCode || '',
+    bodyCode: (JSON.parse(localStorage.getItem('elfeki_ads') || '{}')).bodyCode || '',
+  };
+  localStorage.setItem('elfeki_ads', JSON.stringify(ads));
+  // Also save to data via API
+  saveAdsToDB(ads);
+  toast('✅ Ad settings saved!', 'success');
+}
+
+function saveCustomAds() {
+  const ads = JSON.parse(localStorage.getItem('elfeki_ads') || '{}');
+  ads.headerCode = document.getElementById('adHeaderCode').value.trim();
+  ads.bodyCode = document.getElementById('adBodyCode').value.trim();
+  localStorage.setItem('elfeki_ads', JSON.stringify(ads));
+  saveAdsToDB(ads);
+  toast('✅ Custom ad code saved!', 'success');
+}
+
+async function saveAdsToDB(ads) {
+  try {
+    await fetch('/api/data?action=save-ads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ads }),
+    });
+  } catch (e) { /* fallback to localStorage only */ }
+}
+
+function clearAds() {
+  if (!confirm('Clear all ad settings?')) return;
+  localStorage.removeItem('elfeki_ads');
+  loadAds();
+  toast('🗑️ Ad settings cleared', 'info');
 }
 
 function toast(msg, type='info') {
