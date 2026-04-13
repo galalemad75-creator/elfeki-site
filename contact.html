@@ -54,6 +54,7 @@
 </header>
 
 <div class="contact-wrap">
+  <a href="index.html" style="display:inline-block;margin-bottom:16px;padding:8px 20px;border-radius:8px;background:var(--accent);color:#fff;text-decoration:none;font-weight:600;font-size:0.9rem;transition:0.2s">← Back to Home</a>
   <h1>📬 Contact Us</h1>
   <p class="sub">Have a question or suggestion? We'd love to hear from you.</p>
   <div class="contact-card">
@@ -106,11 +107,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const saved = localStorage.getItem('elfeki_theme');
   const dark = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
   document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-  document.getElementById('themeToggle').addEventListener('click', () => {
-    const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('elfeki_theme', next);
-  });
+  const themeBtn = document.getElementById('themeToggle');
+  if (themeBtn) {
+    themeBtn.textContent = dark ? '☀️' : '🌙';
+    themeBtn.addEventListener('click', () => {
+      const curr = document.documentElement.getAttribute('data-theme');
+      const next = curr === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('elfeki_theme', next);
+      themeBtn.textContent = next === 'dark' ? '☀️' : '🌙';
+    });
+  }
 
   // Show success message if redirected after form submit
   if (new URLSearchParams(window.location.search).get('sent') === '1') {
