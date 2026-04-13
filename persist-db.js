@@ -83,10 +83,11 @@ const PersistDB = {
       this._admin    = data.admin    || { email: '', password: '' };
     }
 
-    // 3b. Sanity check: if chapters exist but ALL have zero songs, reload from data.json
+    // 3b. Sanity check: only reload from data.json if data has chapters but ALL songs have empty audio
     const totalSongs = this._chapters.reduce((s, c) => s + (c.songs ? c.songs.length : 0), 0);
-    if (this._chapters.length > 0 && totalSongs === 0) {
-      console.warn('[PersistDB] Chapters loaded but 0 songs found — forcing reload from data.json');
+    const songsWithAudio = this._chapters.reduce((s, c) => s + (c.songs || []).filter(sg => (sg.audio || '').trim()).length, 0);
+    if (this._chapters.length > 0 && totalSongs > 0 && songsWithAudio === 0) {
+      console.warn('[PersistDB] All songs have empty audio — reloading from data.json');
       const freshData = await this._loadFromJSON();
       if (freshData && Array.isArray(freshData.chapters)) {
         this._chapters = freshData.chapters;
