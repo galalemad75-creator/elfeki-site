@@ -124,37 +124,43 @@ const DB = {
     }
   },
 
-  // ---- File Upload (via serverless proxy) ----
+  // ---- File Upload (via Cloudinary unsigned) ----
   async uploadFile(file, folder, onProgress) {
     return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        try {
-          if (onProgress) onProgress(50);
-          const base64 = reader.result.split(',')[1];
-          const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-          const filename = `${Date.now()}_${safeName}`;
+      const xhr = new XMLHttpRequest();
+      const cloudName = 'dse1s0loh';
+      const uploadPreset = 'ml_default';
 
-          const res = await fetch(API + '?action=upload', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ filename, content: base64, folder: folder || 'audio' }),
-          });
+      xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`);
 
-          if (!res.ok) {
-            const err = await res.json();
-            throw new Error(err.error || 'Upload failed');
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable && onProgress) {
+          onProgress(Math.round((e.loaded / e.total) * 100));
+        }
+      });
+
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          const result = JSON.parse(xhr.responseText);
+          resolve({ url: result.secure_url, path: result.public_id, sha: null });
+        } else {
+          try {
+            const err = JSON.parse(xhr.responseText);
+            reject(new Error(err.error?.message || 'Upload failed: ' + xhr.status));
+          } catch (_) {
+            reject(new Error('Upload failed: ' + xhr.status));
           }
-
-          const result = await res.json();
-          if (onProgress) onProgress(100);
-          resolve({ url: result.url, path: result.path, sha: result.sha });
-        } catch (e) {
-          reject(e);
         }
       };
-      reader.onerror = () => reject(new Error('File read error'));
-      reader.readAsDataURL(file);
+
+      xhr.onerror = () => reject(new Error('Network error during upload'));
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', uploadPreset);
+      if (folder) formData.append('folder', folder);
+
+      xhr.send(formData);
     });
   },
 

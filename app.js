@@ -55,7 +55,7 @@ function toggleTheme() {
 }
 
 function updateThemeIcon(theme) {
-  const btn = document.getElementById('theme-toggle');
+  const btn = document.getElementById('themeToggle');
   if (btn) {
     btn.textContent = theme === 'dark' ? '☀️' : '🌙';
     btn.setAttribute('aria-label', `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`);
@@ -81,7 +81,7 @@ function initNav() {
   }
 
   // Theme toggle button
-  const themeBtn = document.getElementById('theme-toggle');
+  const themeBtn = document.getElementById('themeToggle');
   if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
 
   // Scroll → shrink nav
@@ -610,7 +610,7 @@ function initBgMusic() {
   const saved = localStorage.getItem('elfeki_bg_music_enabled');
   bgMusicEnabled = saved !== 'false'; // default true
 
-  bgMusic = new Audio('https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3');
+  bgMusic = new Audio('default-music.mp3');
   bgMusic.loop = true;
   bgMusic.volume = 0.15;
 

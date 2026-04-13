@@ -1,156 +1,240 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dr. Ibrahim El-Feki — Podcast</title>
-  <meta name="description" content="Listen to Dr. Ibrahim El-Feki's inspiring podcast episodes on positive thinking, self-improvement, and success.">
-  <link rel="stylesheet" href="style.v3.css">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎙️</text></svg>">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2KCPXRS9VL"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-2KCPXRS9VL');
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dr. Ibrahim El-Feki — Human Development Podcast</title>
+<meta name="description" content="The complete human development podcast series by Dr. Ibrahim El-Feki. Self-improvement, positive thinking, time management, and more.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://elfeki-site.vercel.app/index.html">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Dr. Ibrahim El-Feki — Human Development Podcast">
+<meta property="og:description" content="The complete human development series — wisdom from one of the greatest motivational speakers in the Arab world.">
+<meta property="og:url" content="https://elfeki-site.vercel.app/index.html">
+<meta property="og:site_name" content="Dr. El-Feki Podcast">
+<meta property="og:image" content="https://elfeki-site.vercel.app/og-image.png">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Dr. Ibrahim El-Feki — Human Development Podcast">
+<meta name="twitter:description" content="The complete human development series — wisdom from one of the greatest motivational speakers in the Arab world.">
+
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.v3.css">
 </head>
 <body>
 
-  <!-- Stars Background -->
-  <div class="stars-container"></div>
-
-  <!-- Navigation -->
-  <nav class="nav">
-    <a href="index.html" class="nav-logo">
-      <span>🎙️</span> Dr. El-Feki
+<!-- HEADER -->
+<header class="header" id="header">
+  <div class="container nav-inner">
+    <a href="index.html" class="logo">
+      <span class="logo-icon">📖</span>
+      <span class="logo-text">Dr. El-Feki</span>
     </a>
-    <ul class="nav-links">
-      <li><a href="index.html" class="active">Home</a></li>
-      <li><a href="about.html">About</a></li>
-      <li><a href="admin.html">Admin</a></li>
+    <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+    <ul class="nav-links" id="navMenu">
+      <li><a href="index.html" class="nav-link active">Home</a></li>
+      <li><a href="about.html" class="nav-link">About</a></li>
+      <li><a href="contact.html" class="nav-link">Contact</a></li>
     </ul>
-    <div class="nav-right">
-      <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
-        <span class="theme-toggle-icon sun">☀️</span>
-        <span class="theme-toggle-icon moon">🌙</span>
-      </button>
+    <div class="nav-actions">
+      <button id="themeToggle">🌙</button>
+      <a href="admin.html" class="btn btn-primary btn-sm">🔐 Admin</a>
     </div>
-  </nav>
+  </div>
+</header>
 
-  <!-- Hero Section -->
-  <section class="hero">
-    <div class="hero-content">
-      <h1>Dr. Ibrahim El-Feki</h1>
-      <p>Inspiring conversations on positive thinking, personal growth, and living your best life. Tune in and transform.</p>
-      <a href="#chapters" class="hero-cta">🎧 Start Listening</a>
-      <div class="hero-stats">
-        <div class="stat-badge"><span>📚</span> 6 Chapters</div>
-        <div class="stat-badge"><span>🎵</span> 30 Episodes</div>
-        <div class="stat-badge"><span>🌟</span> Free Forever</div>
-      </div>
-    </div>
-  </section>
+<!-- ★ Stars Background ★ -->
+<div class="stars-container" id="starsContainer"></div>
+<script>
+(function(){
+  var c=document.getElementById("starsContainer");
+  for(var i=0;i<60;i++){
+    var s=document.createElement("div");
+    s.className="star";
+    var sz=Math.random()*2.5+1;
+    s.style.width=sz+"px";
+    s.style.height=sz+"px";
+    s.style.left=Math.random()*100+"%";
+    s.style.top=Math.random()*100+"%";
+    s.style.setProperty("--duration",(Math.random()*3+2)+"s");
+    s.style.animationDelay=(Math.random()*5)+"s";
+    c.appendChild(s);
+  }
+})();
+</script>
 
-  <!-- Features -->
-  <section class="section">
-    <div class="section-title reveal">
-      <h2>Why Listen?</h2>
-      <p>Transform your mindset one episode at a time</p>
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-content">
+    <h1>Dr. Ibrahim El-Feki</h1>
+    <p>The complete human development series — wisdom from one of the greatest motivational speakers in the Arab world. Self-improvement, positive thinking, and life-changing lessons.</p>
+    <div class="hero-badges">
+      <div class="badge">📚 <span class="num" id="chCount">6</span> Courses</div>
+      <div class="badge">🎙️ <span class="num" id="epCount">30</span> Episodes</div>
+      <div class="badge">🌍 <span class="num">Free</span> Access</div>
     </div>
-    <div class="features-grid">
-      <div class="feature-card reveal">
-        <div class="feature-icon">🧠</div>
-        <h3>Positive Mindset</h3>
-        <p>Learn techniques to rewire your thinking and embrace optimism in daily life.</p>
-      </div>
-      <div class="feature-card reveal">
-        <div class="feature-icon">⏱️</div>
-        <h3>Time Mastery</h3>
-        <p>Discover how to make every moment count with practical time management strategies.</p>
-      </div>
-      <div class="feature-card reveal">
-        <div class="feature-icon">🚀</div>
-        <h3>Self-Growth</h3>
-        <p>Embark on a journey of continuous improvement and unlock your full potential.</p>
-      </div>
-    </div>
-  </section>
+  </div>
+</section>
 
-  <!-- Chapters -->
-  <section class="section" id="chapters">
-    <div class="section-title reveal">
-      <h2>Browse Chapters</h2>
-      <p>Select a chapter to explore episodes</p>
-    </div>
-    <div class="chapters-grid" id="chaptersGrid"></div>
-  </section>
+<!-- AD SLOT 1 — Between Hero and Features -->
+<div id="ad-slot-1" class="ad-slot" style="display:none;padding:20px;text-align:center;background:var(--bg-secondary)">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="" data-ad-slot="" data-ad-format="auto" data-full-width-responsive="true"></ins>
+</div>
 
-  <!-- Songs View (hidden by default) -->
-  <div class="songs-view" id="songsView">
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="features-grid">
+    <div class="feature-card animate-on-scroll">
+      <div class="feature-icon">💡</div>
+      <h3>Positive Thinking</h3>
+      <p>Transform your mindset and unlock the power of positive thoughts in your daily life.</p>
+    </div>
+    <div class="feature-card animate-on-scroll">
+      <div class="feature-icon">⏳</div>
+      <h3>Time Management</h3>
+      <p>Learn to value your time, set priorities, and achieve work-life balance.</p>
+    </div>
+    <div class="feature-card animate-on-scroll">
+      <div class="feature-icon">🚀</div>
+      <h3>Self-Improvement</h3>
+      <p>Build willpower, develop reading habits, and embrace constructive criticism.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CHAPTERS -->
+<section class="chapters-section" id="chapters">
+  <div class="container">
+    <h2 class="section-title">📚 All Courses</h2>
+    <p class="section-sub">Select a course to explore its episodes</p>
+    <div class="chapters-grid" id="chapters-grid">
+      <p style="text-align:center;color:var(--text-muted);grid-column:1/-1;padding:40px">Loading courses...</p>
+    </div>
+  </div>
+</section>
+
+<!-- SONGS VIEW -->
+<section class="songs-view" id="songs-view" style="display:none">
+  <div class="container">
+    <button class="back-btn" id="songs-back-btn">&larr; Back to Courses</button>
     <div class="songs-header">
-      <button id="backToChapters" class="back-btn">← Back to Chapters</button>
-      <h2 id="songsViewTitle"></h2>
-      <div class="songs-actions">
-        <button id="playAllBtn" class="btn-action btn-play-all">▶ Play All</button>
-        <button id="shuffleAllBtn" class="btn-action btn-shuffle">🔀 Shuffle</button>
-      </div>
+      <h2 id="songs-chapter-title">Chapter</h2>
     </div>
-    <div class="songs-list" id="songsList"></div>
+    <div class="songs-controls" id="songs-controls">
+      <button class="btn-play-all" id="btn-play-all">▶ Play All</button>
+      <button class="btn-shuffle-all" id="btn-shuffle-all">🔀 Shuffle</button>
+    </div>
+    <div class="songs-grid" id="songs-grid"></div>
   </div>
+</section>
 
-  <!-- CTA -->
-  <section class="cta-section reveal">
-    <h2>Ready to Transform?</h2>
-    <p>Start your journey with Dr. Ibrahim El-Feki today.</p>
-    <a href="#chapters" class="hero-cta">🎧 Browse Episodes</a>
-  </section>
+<!-- AD SLOT 2 — After Chapters -->
+<div id="ad-slot-2" class="ad-slot" style="display:none;padding:20px;text-align:center;background:var(--bg-secondary)">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="" data-ad-slot="" data-ad-format="auto" data-full-width-responsive="true"></ins>
+</div>
 
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="footer-links">
-      <a href="index.html">Home</a>
-      <a href="about.html">About</a>
-      <a href="admin.html">Admin</a>
-    </div>
-    <p class="footer-copy">© 2026 Dr. Ibrahim El-Feki. All rights reserved.</p>
-  </footer>
+<!-- CTA -->
+<section class="cta-section">
+  <h2>📖 About Dr. Ibrahim El-Feki</h2>
+  <p>A legendary figure in human development — his lessons continue to inspire millions.</p>
+  <a href="about.html" class="btn btn-primary">Read Biography →</a>
+</section>
 
-  <!-- Now Playing Bar -->
-  <div class="now-playing-bar">
-    <div class="np-progress" id="npProgress">
-      <div class="np-progress-fill" id="npProgressFill"></div>
-    </div>
-    <div class="np-song-info">
-      <div class="np-title" id="npTitle">No song selected</div>
-      <div class="np-chapter" id="npChapter"></div>
-    </div>
-    <div class="np-controls">
-      <button class="np-btn" id="npPrev" title="Previous">⏮</button>
-      <button class="np-btn play-pause" id="npPlayPause" title="Play/Pause">▶</button>
-      <button class="np-btn" id="npNext" title="Next">⏭</button>
-      <button class="np-btn" id="npPlaylistToggle" title="Playlist">📋</button>
-      <button class="np-btn" id="bgMusicToggle" title="Background Music">🔊</button>
-    </div>
-    <div class="np-time" id="npTime">0:00 / 0:00</div>
+<!-- FOOTER -->
+<footer class="footer">
+  <p>📖 Dr. Ibrahim El-Feki — Human Development Series</p>
+  <p style="margin-top:4px">In loving memory — رحمه الله</p>
+  <nav style="display:flex;gap:12px;justify-content:center;margin-top:12px;font-size:0.75rem;flex-wrap:wrap">
+    <a href="privacy.html">Privacy</a>
+    <a href="terms.html">Terms</a>
+    <a href="cookie-policy.html">Cookies</a>
+    <a href="disclaimer.html">Disclaimer</a>
+    <a href="disclosure.html">Disclosure</a>
+    <a href="dmca.html">DMCA</a>
+    <a href="accessibility.html">Accessibility</a>
+    <a href="editorial.html">Editorial</a>
+    <a href="contact.html">Contact</a>
+  </nav>
+</footer>
+
+<!-- AD SLOT 3 — Footer Area -->
+<div id="ad-slot-3" class="ad-slot" style="display:none;padding:20px;text-align:center;background:var(--bg-secondary)">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="" data-ad-slot="" data-ad-format="auto" data-full-width-responsive="true"></ins>
+</div>
+
+<!-- NOW PLAYING -->
+<div class="np-bar">
+  <img id="npImg" style="display:none">
+  <div class="np-info">
+    <div class="np-title" id="npTitle"></div>
+    <div class="np-sub" id="npSub"></div>
   </div>
-
-  <!-- Playlist Panel -->
-  <div class="playlist-panel" id="playlistPanel">
-    <div class="playlist-header">
-      <span>Playlist</span>
-      <button class="playlist-clear" id="playlistClearBtn">Clear All</button>
-    </div>
-    <div class="playlist-items" id="playlistItems">
-      <div class="playlist-empty">Playlist is empty.<br>Add songs to get started!</div>
-    </div>
+  <div class="np-controls">
+    <button onclick="prevSong()">⏮</button>
+    <button onclick="togglePlay()" id="playBtn">▶</button>
+    <button onclick="nextSong()">⏭</button>
+    <button onclick="closePlayer()">✕</button>
   </div>
+  <div class="np-progress" onclick="seekAudio(event)"><div class="np-fill" id="npFill"></div></div>
+</div>
 
-  <!-- Cookie Consent -->
-  <div class="cookie-banner" id="cookieBanner">
-    <p>We use cookies to enhance your experience and save your preferences.</p>
-    <button class="cookie-accept">Got it!</button>
-  </div>
+<audio id="player"></audio>
 
-  <!-- Audio Element -->
-  <audio id="mainAudio" preload="auto"></audio>
+<!-- Cookie Consent Banner -->
+<div class="cookie-banner" id="cookieBanner">
+  <p>🍪 We use cookies to improve your experience and show relevant ads. By continuing to use this site, you agree to our <a href="privacy.html">Privacy Policy</a>.</p>
+  <button class="cookie-btn" onclick="acceptCookies()">Accept</button>
+  <button class="cookie-btn cookie-btn-secondary" onclick="declineCookies()">Decline</button>
+</div>
 
-  <!-- App Script -->
-  <script src="app.v4.js"></script>
+<!-- JSON-LD Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Dr. Ibrahim El-Feki — Human Development Podcast",
+  "url": "https://elfeki-site.vercel.app/",
+  "description": "The complete human development podcast series by Dr. Ibrahim El-Feki. Self-improvement, positive thinking, time management, and more.",
+  "author": {
+    "@type": "Person",
+    "name": "Dr. Ibrahim El-Feki"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Dr. El-Feki Podcast",
+    "url": "https://elfeki-site.vercel.app/"
+  }
+}
+</script>
 
-
+<script src="config.js"></script>
+<script src="persist-db.js"></script>
+<script src="app.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    const ch = DB.getChapters();
+    document.getElementById('chCount').textContent = ch.length;
+    document.getElementById('epCount').textContent = ch.reduce((s, c) => s + (c.songs?.length || 0), 0);
+  }, 500);
+});
+</script>
 </body>
 </html>
+<!-- redeploy 1775735840 -->
+<!-- build-trigger 1775735840 -->
