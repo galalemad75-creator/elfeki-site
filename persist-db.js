@@ -54,7 +54,17 @@ const PersistDB = {
     // 1. Try primary localStorage
     let data = this._loadFromStorage();
 
-    // 2. If still null, fall back to data.json
+    // 2. Try Supabase (cross-device sync)
+    if (!data) {
+      await this._initSupabase();
+      const supaChapters = await this._loadFromSupabase();
+      if (supaChapters) {
+        data = { chapters: supaChapters, nextId: this._nextId, admin: this._admin };
+        console.log('[PersistDB] Restored from Supabase');
+      }
+    }
+
+    // 3. If still null, fall back to data.json
     if (!data) {
       data = await this._loadFromJSON();
     }
@@ -564,6 +574,105 @@ const PersistDB = {
       admin:    this._admin,
     }, null, 2);
   },
+};
+
+
+// ══════════════════════════════════════════════════════════
+//  SUPABASE SYNC — Cross-device persistence
+// ══════════════════════════════════════════════════════════
+
+PersistDB._supa = null;
+PersistDB._supaReady = false;
+
+/**
+ * Initialize Supabase client and test connection.
+ * Called automatically from init().
+ */
+PersistDB._initSupabase = async function() {
+  const SB_URL = 'https://begzpqnbgroanrbicixs.supabase.co';
+  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJlZ3pwcW5iZ3JvYW5yYmljaXhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODI5NDQsImV4cCI6MjA5MDQ1ODk0NH0.9xGGVm7Xrk2cftHguE0iL92CmE7C5Yk3wjeBqb7XL0c';
+
+  try {
+    // Load Supabase JS client
+    if (!window.supabase) {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+      document.head.appendChild(s);
+      await new Promise((resolve, reject) => { s.onload = resolve; s.onerror = reject; });
+    }
+
+    this._supa = window.supabase.createClient(SB_URL, SB_KEY);
+
+    // Test connection
+    await this._supa.from('ef_chapters').select('id').limit(1);
+    this._supaReady = true;
+    console.log('[PersistDB] Supabase connected ✅');
+  } catch (e) {
+    console.warn('[PersistDB] Supabase offline:', e.message || e);
+    this._supaReady = false;
+  }
+};
+
+/**
+ * Load chapters from Supabase (for new visitors / cross-device).
+ * @returns {Array|null} chapters array or null if empty/error
+ */
+PersistDB._loadFromSupabase = async function() {
+  if (!this._supaReady) return null;
+
+  try {
+    const { data, error } = await this._supa.from('ef_chapters').select('*').order('id');
+    if (error) { console.warn('[PersistDB] Supabase load error:', error); return null; }
+    if (!data || data.length === 0) return null;
+
+    // Check if any chapter has songs
+    const hasSongs = data.some(ch => {
+      const songs = Array.isArray(ch.songs) ? ch.songs : JSON.parse(ch.songs || '[]');
+      return songs.length > 0;
+    });
+    if (!hasSongs) return null;
+
+    console.log('[PersistDB] Loaded from Supabase ✅');
+    return data.map(ch => ({
+      id: ch.id,
+      name: ch.name,
+      icon: ch.icon || '📖',
+      songs: Array.isArray(ch.songs) ? ch.songs : JSON.parse(ch.songs || '[]'),
+    }));
+  } catch (e) {
+    console.warn('[PersistDB] Supabase load failed:', e);
+    return null;
+  }
+};
+
+/**
+ * Sync all chapters to Supabase (fire-and-forget).
+ */
+PersistDB._syncToSupabase = async function() {
+  if (!this._supaReady || !this._chapters || this._chapters.length === 0) return;
+
+  try {
+    for (const ch of this._chapters) {
+      await this._supa.from('ef_chapters').upsert({
+        id: ch.id,
+        name: ch.name,
+        icon: ch.icon || '📖',
+        songs: ch.songs || [],
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'id' });
+    }
+    console.log('[PersistDB] Synced to Supabase ✅');
+  } catch (e) {
+    console.warn('[PersistDB] Supabase sync error:', e);
+  }
+};
+
+// Override _save to also sync to Supabase
+const _origSave = PersistDB._save.bind(PersistDB);
+PersistDB._save = function() {
+  _origSave();
+  // Sync to Supabase in background (don't block)
+  this._syncToSupabase();
 };
 
 // ── Global export ─────────────────────────────────────────
