@@ -723,32 +723,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.warn('PersistDB init failed, using fallback:', e);
   }
 
-  try {
-    chapters = PersistDB.getChapters() || [];
-  } catch (e) {
-    console.warn('Failed to load chapters:', e);
-    chapters = [];
-  }
-
-  // ── Staleness check: reload from server if local data is outdated ──
+  // ── Load data: SERVER FIRST always ──
+  let loaded = false;
   try {
     const resp = await fetch('data.json?t=' + Date.now());
     if (resp.ok) {
       const serverData = await resp.json();
-      const serverChapters = serverData.chapters || [];
-      // If chapter count differs AND local data has no real uploaded songs → use server data
-      if (serverChapters.length > 0 && chapters.length !== serverChapters.length) {
-        const hasRealSongs = chapters.some(c => (c.songs || []).some(s => (s.audio || '').trim()));
-        if (!hasRealSongs) {
-          chapters = serverChapters;
-          PersistDB._chapters = serverChapters;
-          PersistDB._nextId = serverData.nextId || { chapter: 7, song: 31 };
-          PersistDB._save();
-          console.log('[App] Reloaded from server: ' + chapters.length + ' chapters');
-        }
+      if (serverData.chapters && serverData.chapters.length > 0) {
+        chapters = serverData.chapters;
+        PersistDB._chapters = serverData.chapters;
+        PersistDB._nextId = serverData.nextId || { chapter: 7, song: 31 };
+        PersistDB._save();
+        loaded = true;
+        console.log('[App] Loaded from server: ' + chapters.length + ' chapters');
       }
     }
-  } catch (e) { /* silent */ }
+  } catch (e) { /* fallback below */ }
+
+  if (!loaded) {
+    try {
+      chapters = PersistDB.getChapters() || [];
+    } catch (e) {
+      console.warn('Failed to load chapters:', e);
+      chapters = [];
+    }
+  }
 
   try {
     playlist = PersistDB.getPlaylist() || [];
