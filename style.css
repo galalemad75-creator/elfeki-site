@@ -835,3 +835,250 @@ body {
   position: relative;
   z-index: 1;
 }
+
+/* ═══════ PLAYLIST PANEL ═══════ */
+.playlist-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5); z-index: 9990;
+  backdrop-filter: blur(4px);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.playlist-overlay.show { opacity: 1; pointer-events: auto; }
+
+.playlist-panel {
+  position: fixed; bottom: 80px; right: 20px;
+  width: 360px; max-height: 500px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 16px);
+  box-shadow: var(--shadow-lg, 0 8px 30px rgba(0,0,0,0.2));
+  z-index: 9991;
+  display: flex; flex-direction: column;
+  transform: translateY(20px) scale(0.95);
+  opacity: 0; pointer-events: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+.playlist-panel.show {
+  transform: translateY(0) scale(1);
+  opacity: 1; pointer-events: auto;
+}
+
+.playlist-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-secondary);
+}
+.playlist-header h3 {
+  font-size: 1rem; font-weight: 800;
+  display: flex; align-items: center; gap: 8px;
+}
+.playlist-header-actions {
+  display: flex; gap: 8px;
+}
+.playlist-header-actions button {
+  background: none; border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 8px); padding: 6px 12px;
+  font-size: 0.75rem; font-weight: 600;
+  color: var(--text-secondary); cursor: pointer;
+  font-family: inherit; transition: all 0.2s;
+}
+.playlist-header-actions button:hover {
+  border-color: var(--accent, #7C3AED);
+  color: var(--accent, #7C3AED);
+}
+.playlist-header-actions .btn-clear {
+  color: var(--danger, #DC2626);
+  border-color: var(--danger, #DC2626);
+}
+
+.playlist-items {
+  flex: 1; overflow-y: auto; padding: 8px;
+}
+.playlist-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm, 8px);
+  cursor: pointer; transition: all 0.2s;
+  margin-bottom: 4px;
+}
+.playlist-item:hover {
+  background: var(--bg-surface, var(--bg-secondary));
+}
+.playlist-item.active {
+  background: var(--accent-light, rgba(124, 58, 237, 0.1));
+  border: 1px solid var(--accent, #7C3AED);
+}
+.playlist-item-num {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--accent-light, rgba(124, 58, 237, 0.1));
+  color: var(--accent, #7C3AED);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; font-weight: 800;
+  flex-shrink: 0;
+}
+.playlist-item.active .playlist-item-num {
+  background: var(--accent, #7C3AED);
+  color: #fff;
+}
+.playlist-item-info {
+  flex: 1; min-width: 0;
+}
+.playlist-item-title {
+  font-weight: 700; font-size: 0.85rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.playlist-item-chapter {
+  font-size: 0.7rem; color: var(--text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.playlist-item-remove {
+  background: none; border: none;
+  color: var(--text-muted); cursor: pointer;
+  font-size: 1rem; padding: 4px;
+  opacity: 0; transition: opacity 0.2s;
+}
+.playlist-item:hover .playlist-item-remove { opacity: 1; }
+.playlist-item-remove:hover { color: var(--danger, #DC2626); }
+
+.playlist-empty {
+  text-align: center; padding: 40px 20px;
+  color: var(--text-muted); font-size: 0.9rem;
+}
+
+/* ═══════ ADD TO PLAYLIST BUTTON ═══════ */
+.btn-add-playlist {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
+.btn-add-playlist:hover {
+  border-color: var(--accent, #7C3AED);
+  color: var(--accent, #7C3AED);
+  background: var(--accent-light, rgba(124, 58, 237, 0.1));
+}
+.btn-add-playlist.added {
+  background: var(--accent, #7C3AED);
+  color: #fff;
+  border-color: var(--accent, #7C3AED);
+}
+
+/* ═══════ PLAY ALL / SHUFFLE ALL BUTTONS ═══════ */
+.chapter-actions {
+  display: flex; gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.btn-play-all {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, var(--accent, #7C3AED), var(--secondary, #EC4899));
+  color: #fff;
+  border: none; border-radius: var(--radius-full, 9999px);
+  font-family: inherit; font-weight: 700; font-size: 0.85rem;
+  cursor: pointer; transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.25);
+}
+.btn-play-all:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.35);
+}
+.btn-shuffle {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm, 0 2px 8px rgba(0,0,0,0.06));
+}
+.btn-shuffle:hover {
+  border-color: var(--accent, #7C3AED);
+  color: var(--accent, #7C3AED);
+}
+
+/* ═══════ BACKGROUND MUSIC CONTROL ═══════ */
+.bg-music-toggle {
+  position: fixed; bottom: 80px; left: 20px;
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md, 0 4px 12px rgba(0,0,0,0.1));
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem;
+  z-index: 998;
+  transition: all 0.3s;
+}
+.bg-music-toggle:hover {
+  border-color: var(--accent, #7C3AED);
+  transform: scale(1.1);
+}
+.bg-music-toggle.playing {
+  background: var(--accent, #7C3AED);
+  color: #fff;
+  border-color: transparent;
+  animation: musicPulse 2s ease-in-out infinite;
+}
+@keyframes musicPulse {
+  0%, 100% { box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2); }
+  50% { box-shadow: 0 4px 20px rgba(124, 58, 237, 0.5); }
+}
+
+/* ═══════ NOW PLAYING BAR — PLAYLIST BUTTON ═══════ */
+.np-playlist-btn {
+  background: none; border: 1px solid var(--border);
+  border-radius: 50%; width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 1rem;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+}
+.np-playlist-btn:hover {
+  border-color: var(--accent, #7C3AED);
+  color: var(--accent, #7C3AED);
+}
+.np-playlist-btn.active {
+  background: var(--accent, #7C3AED);
+  color: #fff;
+  border-color: transparent;
+}
+
+/* ═══════ TOAST ═══════ */
+.toast {
+  position: fixed; top: 80px; left: 50%; transform: translateX(-50%) translateY(-20px);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full, 9999px);
+  padding: 10px 24px;
+  font-size: 0.85rem; font-weight: 600;
+  box-shadow: var(--shadow-lg, 0 8px 30px rgba(0,0,0,0.2));
+  z-index: 10000;
+  opacity: 0; pointer-events: none;
+  transition: all 0.3s ease;
+  color: var(--text-primary);
+}
+.toast.show {
+  opacity: 1; pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+.toast.success { border-color: var(--success, #16A34A); }
+.toast.error { border-color: var(--danger, #DC2626); }
+
+/* ═══════ RESPONSIVE ═══════ */
+@media (max-width: 480px) {
+  .playlist-panel {
+    width: calc(100vw - 20px);
+    right: 10px;
+    bottom: 70px;
+    max-height: 60vh;
+  }
+}
