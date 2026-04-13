@@ -83,19 +83,13 @@ const PersistDB = {
       this._admin    = data.admin    || { email: '', password: '' };
     }
 
-    // 3b. Sanity check: reload from data.json if localStorage data is stale/broken
+    // 3b. Sanity check: only reload from data.json if data has chapters but ALL songs have empty audio
     const totalSongs = this._chapters.reduce((s, c) => s + (c.songs ? c.songs.length : 0), 0);
     const songsWithAudio = this._chapters.reduce((s, c) => s + (c.songs || []).filter(sg => (sg.audio || '').trim()).length, 0);
-    const needsReload = (
-      // Case 1: chapters exist but ALL songs have empty audio
-      (this._chapters.length > 0 && totalSongs > 0 && songsWithAudio === 0) ||
-      // Case 2: chapters exist but have ZERO songs (stale/corrupt data)
-      (this._chapters.length > 0 && totalSongs === 0)
-    );
-    if (needsReload) {
-      console.warn('[PersistDB] Stale data detected (songs=' + totalSongs + ', withAudio=' + songsWithAudio + ') — reloading from data.json');
+    if (this._chapters.length > 0 && totalSongs > 0 && songsWithAudio === 0) {
+      console.warn('[PersistDB] All songs have empty audio — reloading from data.json');
       const freshData = await this._loadFromJSON();
-      if (freshData && Array.isArray(freshData.chapters) && freshData.chapters.length > 0) {
+      if (freshData && Array.isArray(freshData.chapters)) {
         this._chapters = freshData.chapters;
         this._nextId   = freshData.nextId   || { chapter: 7, song: 31 };
         this._admin    = freshData.admin    || this._admin;
