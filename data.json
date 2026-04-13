@@ -5,42 +5,12 @@
       "name": "Positive Thinking",
       "icon": "☀️",
       "songs": [
-        {
-          "id": 1,
-          "title": "The Essence of Positive Thinking",
-          "audio": "",
-          "created": "2026-04-08"
-        },
-        {
-          "id": 2,
-          "title": "Transforming Lives with Positivity",
-          "audio": "",
-          "created": "2026-04-08"
-        },
-        {
-          "id": 3,
-          "title": "Techniques for Positive Thoughts",
-          "audio": "",
-          "created": "2026-04-08"
-        },
-        {
-          "id": 4,
-          "title": "Overcoming Negative Thoughts",
-          "audio": "",
-          "created": "2026-04-08"
-        },
-        {
-          "id": 5,
-          "title": "The Power of Self-Motivation",
-          "audio": "",
-          "created": "2026-04-08"
-        },
-        {
-          "id": 6,
-          "title": "Power of Positive Thinking",
-          "audio": "",
-          "created": "2026-04-08"
-        }
+        {"id": 1, "title": "The Essence of Positive Thinking", "audio": "", "created": "2026-04-08"},
+        {"id": 2, "title": "Transforming Lives with Positivity", "audio": "", "created": "2026-04-08"},
+        {"id": 3, "title": "Techniques for Positive Thoughts", "audio": "", "created": "2026-04-08"},
+        {"id": 4, "title": "Overcoming Negative Thoughts", "audio": "", "created": "2026-04-08"},
+        {"id": 5, "title": "The Power of Self-Motivation", "audio": "", "created": "2026-04-08"},
+        {"id": 6, "title": "Power of Positive Thinking", "audio": "", "created": "2026-04-08"}
       ]
     },
     {
@@ -48,42 +18,12 @@
       "name": "Time is Precious",
       "icon": "⏳",
       "songs": [
-        {
-          "id": 7,
-          "title": "Value of Time",
-          "audio": "",
-          "created": "2026-04-08"
-        },
-        {
-          "id": 8,
-          "title": "Setting Priorities",
-          "audio": "",
-          "created": "2026-04-08"
-        },
-        {
-          "id": 9,
-          "title": "Effective Planning Techniques",
-          "audio": "",
-          "created": "2026-04-08"
-        },
-        {
-          "id": 10,
-          "title": "Time Management at Work",
-          "audio": "",
-          "created": "2026-04-08"
-        },
-        {
-          "id": 11,
-          "title": "Balancing Work and Life",
-          "audio": "",
-          "created": "2026-04-08"
-        },
-        {
-          "id": 12,
-          "title": "Time is Precious",
-          "audio": "",
-          "created": "2026-04-08"
-        }
+        {"id": 7, "title": "Value of Time", "audio": "", "created": "2026-04-08"},
+        {"id": 8, "title": "Setting Priorities", "audio": "", "created": "2026-04-08"},
+        {"id": 9, "title": "Effective Planning Techniques", "audio": "", "created": "2026-04-08"},
+        {"id": 10, "title": "Time Management at Work", "audio": "", "created": "2026-04-08"},
+        {"id": 11, "title": "Balancing Work and Life", "audio": "", "created": "2026-04-08"},
+        {"id": 12, "title": "Time is Precious", "audio": "", "created": "2026-04-08"}
       ]
     },
     {
@@ -91,42 +31,12 @@
       "name": "Self-Improvement Journey",
       "icon": "🚀",
       "songs": [
-        {
-          "id": 13,
-          "title": "1-Understanding Self-Improvement",
-          "audio": "",
-          "created": "2026-04-08"
-        },
-        {
-          "id": 14,
-          "title": "2-Reading for Growth",
-          "audio": "",
-          "created": "2026-04-08"
-        },
-        {
-          "id": 15,
-          "title": "3-Habits of Successful People",
-          "audio": "",
-          "created": "2026-04-08"
-        },
-        {
-          "id": 16,
-          "title": "4-Overcoming Procrastination",
-          "audio": "",
-          "created": "2026-04-08"
-        },
-        {
-          "id": 17,
-          "title": "5-Learning from Failure",
-          "audio": "",
-          "created": "2026-04-08"
-        },
-        {
-          "id": 18,
-          "title": "6-Continuous Learning",
-          "audio": "",
-          "created": "2026-04-08"
-        }
+        {"id": 13, "title": "1-Understanding Self-Improvement", "audio": "", "created": "2026-04-08"},
+        {"id": 14, "title": "2-Reading for Growth", "audio": "", "created": "2026-04-08"},
+        {"id": 15, "title": "3-Habits of Successful People", "audio": "", "created": "2026-04-08"},
+        {"id": 16, "title": "4-Overcoming Procrastination", "audio": "", "created": "2026-04-08"},
+        {"id": 17, "title": "5-Learning from Failure", "audio": "", "created": "2026-04-08"},
+        {"id": 18, "title": "6-Continuous Learning", "audio": "", "created": "2026-04-08"}
       ]
     },
     {
@@ -134,42 +44,12 @@
       "name": "Leadership & Success",
       "icon": "🏆",
       "songs": [
-        {
-          "id": 19,
-          "title": "Qualities of a Leader",
-          "audio": "",
-          "created": "2026-04-08"
-        },
-        {
-          "id": 20,
-          "title": "Decision Making Skills",
-          "audio": "",
-          "created": "2026-04-08"
-        },
-        {
-          "id": 21,
-          "title": "Building Confidence",
-          "audio": "",
-          "created": "2026-04-08"
-        },
-        {
-          "id": 22,
-          "title": "Success Mindset",
-          "audio": "",
-          "created": "2026-04-08"
-        },
-        {
-          "id": 23,
-          "title": "Team Building",
-          "audio": "",
-          "created": "2026-04-08"
-        },
-        {
-          "id": 24,
-          "title": "Visionary Thinking",
-          "audio": "",
-          "created": "2026-04-08"
-        }
+        {"id": 19, "title": "Qualities of a Leader", "audio": "", "created": "2026-04-08"},
+        {"id": 20, "title": "Decision Making Skills", "audio": "", "created": "2026-04-08"},
+        {"id": 21, "title": "Building Confidence", "audio": "", "created": "2026-04-08"},
+        {"id": 22, "title": "Success Mindset", "audio": "", "created": "2026-04-08"},
+        {"id": 23, "title": "Team Building", "audio": "", "created": "2026-04-08"},
+        {"id": 24, "title": "Visionary Thinking", "audio": "", "created": "2026-04-08"}
       ]
     },
     {
@@ -177,30 +57,10 @@
       "name": "Health & Wellness",
       "icon": "💪",
       "songs": [
-        {
-          "id": 25,
-          "title": "Physical Health Basics",
-          "audio": "",
-          "created": "2026-04-08"
-        },
-        {
-          "id": 26,
-          "title": "Mental Wellness",
-          "audio": "",
-          "created": "2026-04-08"
-        },
-        {
-          "id": 27,
-          "title": "Stress Management",
-          "audio": "",
-          "created": "2026-04-08"
-        },
-        {
-          "id": 28,
-          "title": "Healthy Lifestyle Choices",
-          "audio": "",
-          "created": "2026-04-08"
-        }
+        {"id": 25, "title": "Physical Health Basics", "audio": "", "created": "2026-04-08"},
+        {"id": 26, "title": "Mental Wellness", "audio": "", "created": "2026-04-08"},
+        {"id": 27, "title": "Stress Management", "audio": "", "created": "2026-04-08"},
+        {"id": 28, "title": "Healthy Lifestyle Choices", "audio": "", "created": "2026-04-08"}
       ]
     },
     {
@@ -208,18 +68,8 @@
       "name": "Relationships & Communication",
       "icon": "💬",
       "songs": [
-        {
-          "id": 29,
-          "title": "Art of Communication",
-          "audio": "",
-          "created": "2026-04-08"
-        },
-        {
-          "id": 30,
-          "title": "Building Strong Relationships",
-          "audio": "",
-          "created": "2026-04-08"
-        }
+        {"id": 29, "title": "Art of Communication", "audio": "", "created": "2026-04-08"},
+        {"id": 30, "title": "Building Strong Relationships", "audio": "", "created": "2026-04-08"}
       ]
     }
   ],
@@ -230,6 +80,5 @@
   "admin": {
     "email": "admin@elfeki.com",
     "password": "ElFeki2026!"
-  },
-  "dataVersion": 2
+  }
 }
