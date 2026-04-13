@@ -53,6 +53,7 @@ const DB = {
     }
 
     localStorage.setItem('elfeki_cache', JSON.stringify(this._cache));
+    try { localStorage.setItem('elfeki_chapters', JSON.stringify(this._cache)); } catch(e) {}
     return this._cache;
   },
 
@@ -61,6 +62,8 @@ const DB = {
   async save(message) {
     const data = this._cache;
     localStorage.setItem('elfeki_cache', JSON.stringify(data));
+    // Also save to persist-db.js key for main page sync
+    try { localStorage.setItem('elfeki_chapters', JSON.stringify(data)); } catch(e) {}
 
     try {
       await fetch(API + '?action=save', {

@@ -417,6 +417,13 @@ const PersistDB = {
     } catch (e) {
       console.warn('[PersistDB] _save backup error:', e);
     }
+
+    // Write to config.js shared key (sync with admin panel)
+    try {
+      localStorage.setItem('elfeki_cache', payload);
+    } catch (e) {
+      console.warn('[PersistDB] _save elfeki_cache error:', e);
+    }
   },
 
   /**
@@ -451,6 +458,20 @@ const PersistDB = {
       }
     } catch (e) {
       console.warn('[PersistDB] Backup load error:', e);
+    }
+
+    // Try config.js key (elfeki_cache) — shared with admin panel
+    try {
+      const raw = localStorage.getItem('elfeki_cache');
+      if (raw) {
+        const data = JSON.parse(raw);
+        if (data && Array.isArray(data.chapters)) {
+          console.log('[PersistDB] Loaded from elfeki_cache (config.js shared).');
+          return data;
+        }
+      }
+    } catch (e) {
+      console.warn('[PersistDB] elfeki_cache load error:', e);
     }
 
     return null;
