@@ -730,6 +730,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     chapters = [];
   }
 
+  // ── Staleness check: reload from server if local data is outdated ──
+  try {
+    const resp = await fetch('data.json?t=' + Date.now());
+    if (resp.ok) {
+      const serverData = await resp.json();
+      const serverChapters = serverData.chapters || [];
+      // If chapter count differs AND local data has no real uploaded songs → use server data
+      if (serverChapters.length > 0 && chapters.length !== serverChapters.length) {
+        const hasRealSongs = chapters.some(c => (c.songs || []).some(s => (s.audio || '').trim()));
+        if (!hasRealSongs) {
+          chapters = serverChapters;
+          PersistDB._chapters = serverChapters;
+          PersistDB._nextId = serverData.nextId || { chapter: 7, song: 31 };
+          PersistDB._save();
+          console.log('[App] Reloaded from server: ' + chapters.length + ' chapters');
+        }
+      }
+    }
+  } catch (e) { /* silent */ }
+
   try {
     playlist = PersistDB.getPlaylist() || [];
   } catch (e) {
