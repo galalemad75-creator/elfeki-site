@@ -33,6 +33,7 @@ const PersistDB = {
     cookies:        'elfeki_cookie_consent',
     admin:          'elfeki_admin',
     ads:            'elfeki_ads',
+    dataVersion:    'elfeki_data_version',
   },
 
   // ── In-memory state ───────────────────────────────────────
@@ -53,8 +54,26 @@ const PersistDB = {
   async init() {
     // 1. Try primary localStorage
     let data = this._loadFromStorage();
+    const storedVersion = parseInt(localStorage.getItem(this.KEYS.dataVersion) || '0');
 
-    // 2. Try Supabase (cross-device sync) — with 5s timeout to avoid blocking
+    // 2. Always check data.json version (lightweight HEAD-like check)
+    let serverData = null;
+    let serverVersion = 0;
+    try {
+      serverData = await this._loadFromJSON();
+      if (serverData && serverData.dataVersion) {
+        serverVersion = parseInt(serverData.dataVersion);
+      }
+    } catch (e) { /* ignore */ }
+
+    // 2b. If server version is newer than stored, use server data
+    if (serverData && serverVersion > 0 && serverVersion !== storedVersion) {
+      console.warn('[PersistDB] Data version mismatch (local=' + storedVersion + ', server=' + serverVersion + ') — using server data');
+      data = serverData;
+      try { localStorage.setItem(this.KEYS.dataVersion, String(serverVersion)); } catch(e) {}
+    }
+
+    // 3. Try Supabase (cross-device sync) — with 5s timeout to avoid blocking
     if (!data) {
       try {
         await Promise.race([
@@ -71,37 +90,36 @@ const PersistDB = {
       }
     }
 
-    // 3. If still null, fall back to data.json
+    // 4. If still null, fall back to data.json
     if (!data) {
-      data = await this._loadFromJSON();
+      data = serverData || await this._loadFromJSON();
     }
 
-    // 3. Apply loaded data (or defaults if everything failed)
+    // 5. Apply loaded data (or defaults if everything failed)
     if (data) {
       this._chapters = Array.isArray(data.chapters) ? data.chapters : [];
       this._nextId   = data.nextId   || { chapter: 7, song: 31 };
       this._admin    = data.admin    || { email: '', password: '' };
     }
 
-    // 3b. Sanity check: only reload from data.json if data has chapters but ALL songs have empty audio
+    // 5b. Sanity check: reload if chapters have NO songs at all
     const totalSongs = this._chapters.reduce((s, c) => s + (c.songs ? c.songs.length : 0), 0);
     const songsWithAudio = this._chapters.reduce((s, c) => s + (c.songs || []).filter(sg => (sg.audio || '').trim()).length, 0);
     if (this._chapters.length > 0 && totalSongs > 0 && songsWithAudio === 0) {
       console.warn('[PersistDB] All songs have empty audio — reloading from data.json');
-      const freshData = await this._loadFromJSON();
-      if (freshData && Array.isArray(freshData.chapters)) {
-        this._chapters = freshData.chapters;
-        this._nextId   = freshData.nextId   || { chapter: 7, song: 31 };
-        this._admin    = freshData.admin    || this._admin;
+      if (serverData && Array.isArray(serverData.chapters)) {
+        this._chapters = serverData.chapters;
+        this._nextId   = serverData.nextId   || { chapter: 7, song: 31 };
+        this._admin    = serverData.admin    || this._admin;
         this._save();
       }
     }
 
-    // 4. Ensure backup is current
+    // 6. Ensure backup is current
     this._save();
     this._ready = true;
 
-    console.log(`[PersistDB] Initialised — ${this._chapters.length} chapters loaded.`);
+    console.log('[PersistDB] Initialised — ' + this._chapters.length + ' chapters loaded.');
   },
 
   // ══════════════════════════════════════════════════════════
