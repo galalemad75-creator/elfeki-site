@@ -122,9 +122,24 @@
   <div class="container">
     <h2 class="section-title">📚 All Courses</h2>
     <p class="section-sub">Select a course to explore its episodes</p>
-    <div class="chapters-grid" id="chaptersGrid">
+    <div class="chapters-grid" id="chapters-grid">
       <p style="text-align:center;color:var(--text-muted);grid-column:1/-1;padding:40px">Loading courses...</p>
     </div>
+  </div>
+</section>
+
+<!-- SONGS VIEW -->
+<section class="songs-view" id="songs-view" style="display:none">
+  <div class="container">
+    <button class="back-btn" id="songs-back-btn">&larr; Back to Courses</button>
+    <div class="songs-header">
+      <h2 id="songs-chapter-title">Chapter</h2>
+    </div>
+    <div class="songs-controls" id="songs-controls">
+      <button class="btn-play-all" id="btn-play-all">▶ Play All</button>
+      <button class="btn-shuffle-all" id="btn-shuffle-all">🔀 Shuffle</button>
+    </div>
+    <div class="songs-grid" id="songs-grid"></div>
   </div>
 </section>
 

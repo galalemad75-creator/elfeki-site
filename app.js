@@ -94,7 +94,7 @@ function initNav() {
 function showHome() {
   const hero = document.querySelector('.hero');
   const features = document.querySelector('.features');
-  const chaptersSection = document.getElementById('chapters-section') || document.querySelector('.chapters');
+  const chaptersSection = document.getElementById('chapters') || document.querySelector('.chapters-section');
   const cta = document.querySelector('.cta');
   const songsView = document.getElementById('songs-view');
 
@@ -108,10 +108,9 @@ function showHome() {
 }
 
 function showSongsView(chapter) {
-  currentChapter = chapter;
   const hero = document.querySelector('.hero');
   const features = document.querySelector('.features');
-  const chaptersSection = document.getElementById('chapters-section') || document.querySelector('.chapters');
+  const chaptersSection = document.getElementById('chapters') || document.querySelector('.chapters-section');
   const cta = document.querySelector('.cta');
   const songsView = document.getElementById('songs-view');
 
@@ -121,35 +120,16 @@ function showSongsView(chapter) {
   songsView.style.display = '';
 
   // Header
-  const headerEl = songsView.querySelector('.songs-header h2') || document.getElementById('songs-chapter-title');
+  const headerEl = document.getElementById('songs-chapter-title') || songsView.querySelector('.songs-header h2');
   if (headerEl) headerEl.textContent = chapter.title || chapter.name || 'Chapter';
 
-  // Back button
-  let backBtn = songsView.querySelector('.back-btn');
-  if (!backBtn) {
-    backBtn = document.createElement('button');
-    backBtn.className = 'back-btn';
-    backBtn.innerHTML = '← Back';
-    backBtn.addEventListener('click', showHome);
-    songsView.prepend(backBtn);
-  }
+  // Back button — already exists in HTML, wired in initChapters()
 
-  // Play-all / shuffle-all buttons
-  let controls = songsView.querySelector('.songs-controls');
-  if (!controls) {
-    controls = document.createElement('div');
-    controls.className = 'songs-controls';
-    controls.innerHTML = `
-      <button class="btn-play-all" id="btn-play-all">▶ Play All</button>
-      <button class="btn-shuffle-all" id="btn-shuffle-all">🔀 Shuffle</button>
-    `;
-    songsView.querySelector('.songs-header')?.after(controls);
-    document.getElementById('btn-play-all')?.addEventListener('click', () => buildPlaylistFromChapter(currentChapter, false));
-    document.getElementById('btn-shuffle-all')?.addEventListener('click', () => buildPlaylistFromChapter(currentChapter, true));
-  }
+  // Play-all / shuffle-all buttons — already in HTML, just update context
+  currentChapter = chapter;
 
   // Render song cards
-  const grid = songsView.querySelector('.songs-grid') || document.getElementById('songs-list');
+  const grid = document.getElementById('songs-grid') || songsView.querySelector('.songs-grid');
   if (!grid) return;
   grid.innerHTML = '';
 
@@ -186,6 +166,14 @@ function showSongsView(chapter) {
 // ─── Chapters Grid ───────────────────────────────────────────────────────────
 function initChapters() {
   renderChapters();
+  // Wire back button
+  const backBtn = document.getElementById('songs-back-btn');
+  if (backBtn) backBtn.addEventListener('click', showHome);
+  // Wire play all / shuffle
+  const playAllBtn = document.getElementById('btn-play-all');
+  if (playAllBtn) playAllBtn.addEventListener('click', () => { if (currentChapter) buildPlaylistFromChapter(currentChapter, false); });
+  const shuffleBtn = document.getElementById('btn-shuffle-all');
+  if (shuffleBtn) shuffleBtn.addEventListener('click', () => { if (currentChapter) buildPlaylistFromChapter(currentChapter, true); });
 }
 
 function renderChapters() {
@@ -196,10 +184,13 @@ function renderChapters() {
   chapters.forEach(ch => {
     const card = document.createElement('div');
     card.className = 'chapter-card';
+    const icon = ch.icon || '📖';
+    const name = ch.name || ch.title || 'Chapter';
+    const songCount = (ch.songs || []).length;
     card.innerHTML = `
-      <img src="${ch.image || ch.cover || ''}" alt="${ch.title || ''}" class="chapter-img" loading="lazy" />
-      <h3>${ch.title || ch.name || ''}</h3>
-      <p>${ch.description || ''}</p>
+      <span class="chapter-icon">${icon}</span>
+      <h3>${name}</h3>
+      <span class="chapter-songs-count">${songCount} episode${songCount !== 1 ? 's' : ''}</span>
     `;
     card.addEventListener('click', () => showSongsView(ch));
     grid.appendChild(card);
@@ -623,16 +614,21 @@ function initBgMusic() {
   bgMusic.loop = true;
   bgMusic.volume = 0.15;
 
-  // Browser autoplay: play on first user interaction
-  const tryPlayBg = () => {
-    if (bgMusicEnabled && bgMusic.paused) {
-      bgMusic.play().catch(() => {});
-    }
-    document.removeEventListener('click', tryPlayBg);
-    document.removeEventListener('touchstart', tryPlayBg);
-  };
-  document.addEventListener('click', tryPlayBg, { once: true });
-  document.addEventListener('touchstart', tryPlayBg, { once: true });
+  // Auto-play background music immediately
+  if (bgMusicEnabled) {
+    bgMusic.play().catch(() => {
+      // Fallback: play on first user interaction if autoplay blocked
+      const tryPlayBg = () => {
+        if (bgMusicEnabled && bgMusic.paused) {
+          bgMusic.play().catch(() => {});
+        }
+        document.removeEventListener('click', tryPlayBg);
+        document.removeEventListener('touchstart', tryPlayBg);
+      };
+      document.addEventListener('click', tryPlayBg, { once: true });
+      document.addEventListener('touchstart', tryPlayBg, { once: true });
+    });
+  }
 
   updateBgMusicBtn();
 }

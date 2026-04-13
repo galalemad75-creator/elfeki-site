@@ -1082,3 +1082,128 @@ body {
     max-height: 60vh;
   }
 }
+
+/* ── Songs View ───────────────────────────────────────── */
+.songs-view {
+  padding: 100px 20px 120px;
+  min-height: 60vh;
+}
+
+.back-btn {
+  background: var(--accent, #6c5ce7);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 24px;
+  transition: opacity 0.2s;
+}
+.back-btn:hover { opacity: 0.85; }
+
+.songs-header h2 {
+  font-size: 1.8rem;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.songs-controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.btn-play-all, .btn-shuffle-all {
+  background: var(--accent, #6c5ce7);
+  color: #fff;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+.btn-play-all:hover, .btn-shuffle-all:hover { opacity: 0.85; }
+.btn-shuffle-all { background: var(--text-secondary, #636e72); }
+
+.songs-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.song-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: var(--bg-secondary, #f8f9fa);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+.song-card:hover {
+  background: var(--accent-light, #6c5ce715);
+  transform: translateX(4px);
+}
+.song-card.playing {
+  background: var(--accent-light, #6c5ce720);
+  border-left: 3px solid var(--accent, #6c5ce7);
+}
+
+.song-play-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent, #6c5ce7);
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.15s;
+}
+.song-play-btn:hover { transform: scale(1.1); }
+
+.song-title {
+  flex: 1;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text);
+}
+
+.song-add-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+.song-add-btn:hover { opacity: 1; }
+
+/* ── Chapter Card Icon Fix ───────────────────────────── */
+.chapter-card {
+  text-align: center;
+  padding: 24px 16px;
+}
+.chapter-card .chapter-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  display: block;
+}
+.chapter-card h3 {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+}
+.chapter-card .chapter-songs-count {
+  font-size: 13px;
+  color: var(--text-secondary, #999);
+}
