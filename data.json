@@ -1,12 +1,234 @@
 {
   "chapters": [
-    {"id":1,"name":"Positive Thinking","icon":"☀️","songs":[{"id":1,"title":"The Essence of Positive Thinking","audio":"","created":"2026-04-08"},{"id":2,"title":"Transforming Lives with Positivity","audio":"","created":"2026-04-08"},{"id":3,"title":"Techniques for Positive Thoughts","audio":"","created":"2026-04-08"},{"id":4,"title":"Overcoming Negative Thoughts","audio":"","created":"2026-04-08"},{"id":5,"title":"The Power of Self-Motivation","audio":"","created":"2026-04-08"},{"id":6,"title":"Power of Positive Thinking","audio":"","created":"2026-04-08"}]},
-    {"id":2,"name":"Time is Precious","icon":"⏳","songs":[{"id":7,"title":"Value of Time","audio":"","created":"2026-04-08"},{"id":8,"title":"Setting Priorities","audio":"","created":"2026-04-08"},{"id":9,"title":"Effective Planning Techniques","audio":"","created":"2026-04-08"},{"id":10,"title":"Time Management at Work","audio":"","created":"2026-04-08"},{"id":11,"title":"Balancing Work and Life","audio":"","created":"2026-04-08"},{"id":12,"title":"Time is Precious","audio":"","created":"2026-04-08"}]},
-    {"id":3,"name":"Self-Improvement Journey","icon":"🚀","songs":[{"id":13,"title":"1-Understanding Self-Improvement","audio":"","created":"2026-04-08"},{"id":14,"title":"2-Setting Personal Goals","audio":"","created":"2026-04-08"},{"id":15,"title":"3-Building Good Habits","audio":"","created":"2026-04-08"},{"id":16,"title":"4-Overcoming Procrastination","audio":"","created":"2026-04-08"},{"id":17,"title":"5-Mindfulness and Meditation","audio":"","created":"2026-04-08"},{"id":18,"title":"6-Emotional Intelligence","audio":"","created":"2026-04-08"}]},
-    {"id":4,"name":"Leadership & Success","icon":"🏆","songs":[{"id":19,"title":"Qualities of a Great Leader","audio":"","created":"2026-04-08"},{"id":20,"title":"Decision Making Skills","audio":"","created":"2026-04-08"},{"id":21,"title":"Building a Vision","audio":"","created":"2026-04-08"},{"id":22,"title":"Team Building Strategies","audio":"","created":"2026-04-08"},{"id":23,"title":"Handling Failure","audio":"","created":"2026-04-08"},{"id":24,"title":"Path to Success","audio":"","created":"2026-04-08"}]},
-    {"id":5,"name":"Health & Wellness","icon":"💪","songs":[{"id":25,"title":"Physical Fitness Basics","audio":"","created":"2026-04-08"},{"id":26,"title":"Nutrition and Diet","audio":"","created":"2026-04-08"},{"id":27,"title":"Mental Health Awareness","audio":"","created":"2026-04-08"},{"id":28,"title":"Sleep and Recovery","audio":"","created":"2026-04-08"}]},
-    {"id":6,"name":"Relationships & Communication","icon":"💬","songs":[{"id":29,"title":"Effective Communication","audio":"","created":"2026-04-08"},{"id":30,"title":"Building Trust","audio":"","created":"2026-04-08"}]}
+    {
+      "id": 1,
+      "name": "Positive Thinking",
+      "icon": "☀️",
+      "songs": [
+        {
+          "id": 1,
+          "title": "The Essence of Positive Thinking",
+          "audio": "",
+          "created": "2026-04-08"
+        },
+        {
+          "id": 2,
+          "title": "Transforming Lives with Positivity",
+          "audio": "",
+          "created": "2026-04-08"
+        },
+        {
+          "id": 3,
+          "title": "Techniques for Positive Thoughts",
+          "audio": "",
+          "created": "2026-04-08"
+        },
+        {
+          "id": 4,
+          "title": "Overcoming Negative Thoughts",
+          "audio": "",
+          "created": "2026-04-08"
+        },
+        {
+          "id": 5,
+          "title": "The Power of Self-Motivation",
+          "audio": "",
+          "created": "2026-04-08"
+        },
+        {
+          "id": 6,
+          "title": "Power of Positive Thinking",
+          "audio": "",
+          "created": "2026-04-08"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Time is Precious",
+      "icon": "⏳",
+      "songs": [
+        {
+          "id": 7,
+          "title": "Value of Time",
+          "audio": "",
+          "created": "2026-04-08"
+        },
+        {
+          "id": 8,
+          "title": "Setting Priorities",
+          "audio": "",
+          "created": "2026-04-08"
+        },
+        {
+          "id": 9,
+          "title": "Effective Planning Techniques",
+          "audio": "",
+          "created": "2026-04-08"
+        },
+        {
+          "id": 10,
+          "title": "Time Management at Work",
+          "audio": "",
+          "created": "2026-04-08"
+        },
+        {
+          "id": 11,
+          "title": "Balancing Work and Life",
+          "audio": "",
+          "created": "2026-04-08"
+        },
+        {
+          "id": 12,
+          "title": "Time is Precious",
+          "audio": "",
+          "created": "2026-04-08"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Self-Improvement Journey",
+      "icon": "🚀",
+      "songs": [
+        {
+          "id": 13,
+          "title": "1-Understanding Self-Improvement",
+          "audio": "",
+          "created": "2026-04-08"
+        },
+        {
+          "id": 14,
+          "title": "2-Setting Personal Goals",
+          "audio": "",
+          "created": "2026-04-08"
+        },
+        {
+          "id": 15,
+          "title": "3-Building Good Habits",
+          "audio": "",
+          "created": "2026-04-08"
+        },
+        {
+          "id": 16,
+          "title": "4-Overcoming Procrastination",
+          "audio": "",
+          "created": "2026-04-08"
+        },
+        {
+          "id": 17,
+          "title": "5-Mindfulness and Meditation",
+          "audio": "",
+          "created": "2026-04-08"
+        },
+        {
+          "id": 18,
+          "title": "6-Emotional Intelligence",
+          "audio": "",
+          "created": "2026-04-08"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Leadership & Success",
+      "icon": "🏆",
+      "songs": [
+        {
+          "id": 19,
+          "title": "Qualities of a Great Leader",
+          "audio": "",
+          "created": "2026-04-08"
+        },
+        {
+          "id": 20,
+          "title": "Decision Making Skills",
+          "audio": "",
+          "created": "2026-04-08"
+        },
+        {
+          "id": 21,
+          "title": "Building a Vision",
+          "audio": "",
+          "created": "2026-04-08"
+        },
+        {
+          "id": 22,
+          "title": "Team Building Strategies",
+          "audio": "",
+          "created": "2026-04-08"
+        },
+        {
+          "id": 23,
+          "title": "Handling Failure",
+          "audio": "",
+          "created": "2026-04-08"
+        },
+        {
+          "id": 24,
+          "title": "Path to Success",
+          "audio": "",
+          "created": "2026-04-08"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Health & Wellness",
+      "icon": "💪",
+      "songs": [
+        {
+          "id": 25,
+          "title": "Physical Fitness Basics",
+          "audio": "",
+          "created": "2026-04-08"
+        },
+        {
+          "id": 26,
+          "title": "Nutrition and Diet",
+          "audio": "",
+          "created": "2026-04-08"
+        },
+        {
+          "id": 27,
+          "title": "Mental Health Awareness",
+          "audio": "",
+          "created": "2026-04-08"
+        },
+        {
+          "id": 28,
+          "title": "Sleep and Recovery",
+          "audio": "",
+          "created": "2026-04-08"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Relationships & Communication",
+      "icon": "💬",
+      "songs": [
+        {
+          "id": 29,
+          "title": "Effective Communication",
+          "audio": "",
+          "created": "2026-04-08"
+        },
+        {
+          "id": 30,
+          "title": "Building Trust",
+          "audio": "",
+          "created": "2026-04-08"
+        }
+      ]
+    }
   ],
-  "nextId": {"chapter":7,"song":31},
-  "admin": {"email":"","password":""}
+  "nextId": {
+    "chapter": 7,
+    "song": 31
+  },
+  "admin": {
+    "email": "admin@elfeki.com",
+    "password": "ElFeki2026!"
+  }
 }
