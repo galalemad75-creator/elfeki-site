@@ -54,9 +54,16 @@ const PersistDB = {
     // 1. Try primary localStorage
     let data = this._loadFromStorage();
 
-    // 2. Try Supabase (cross-device sync)
+    // 2. Try Supabase (cross-device sync) — with 5s timeout to avoid blocking
     if (!data) {
-      await this._initSupabase();
+      try {
+        await Promise.race([
+          this._initSupabase(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Supabase timeout')), 5000))
+        ]);
+      } catch (e) {
+        console.warn('[PersistDB] Supabase init skipped:', e.message);
+      }
       const supaChapters = await this._loadFromSupabase();
       if (supaChapters) {
         data = { chapters: supaChapters, nextId: this._nextId, admin: this._admin };
@@ -74,6 +81,19 @@ const PersistDB = {
       this._chapters = Array.isArray(data.chapters) ? data.chapters : [];
       this._nextId   = data.nextId   || { chapter: 7, song: 31 };
       this._admin    = data.admin    || { email: '', password: '' };
+    }
+
+    // 3b. Sanity check: if chapters exist but ALL have zero songs, reload from data.json
+    const totalSongs = this._chapters.reduce((s, c) => s + (c.songs ? c.songs.length : 0), 0);
+    if (this._chapters.length > 0 && totalSongs === 0) {
+      console.warn('[PersistDB] Chapters loaded but 0 songs found — forcing reload from data.json');
+      const freshData = await this._loadFromJSON();
+      if (freshData && Array.isArray(freshData.chapters)) {
+        this._chapters = freshData.chapters;
+        this._nextId   = freshData.nextId   || { chapter: 7, song: 31 };
+        this._admin    = freshData.admin    || this._admin;
+        this._save();
+      }
     }
 
     // 4. Ensure backup is current

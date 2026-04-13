@@ -228,10 +228,12 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
-    const ch = DB.getChapters();
-    document.getElementById('chCount').textContent = ch.length;
-    document.getElementById('epCount').textContent = ch.reduce((s, c) => s + (c.songs?.length || 0), 0);
-  }, 500);
+    try {
+      const ch = (typeof PersistDB !== 'undefined' && PersistDB.getChapters) ? PersistDB.getChapters() : [];
+      document.getElementById('chCount').textContent = ch.length;
+      document.getElementById('epCount').textContent = ch.reduce((s, c) => s + ((c.songs || []).length), 0);
+    } catch(e) { console.warn('Stats update failed:', e); }
+  }, 1000);
 });
 </script>
 </body>
