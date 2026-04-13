@@ -773,6 +773,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   ensureNowPlayingBar();
 
   renderChapters();
+
+  // Update hero stats
+  try {
+    const chEl = document.getElementById('chCount');
+    const epEl = document.getElementById('epCount');
+    if (chEl) chEl.textContent = chapters.length;
+    if (epEl) epEl.textContent = chapters.reduce((s, c) => s + ((c.songs || []).length), 0);
+  } catch(e) {}
 });
 
 // ─── Ensure Now Playing Bar Has All Controls ─────────────────────────────────

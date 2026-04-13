@@ -234,17 +234,6 @@
 <script src="config.js"></script>
 <script src="persist-db.js"></script>
 <script src="app.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  setTimeout(() => {
-    try {
-      const ch = (typeof PersistDB !== 'undefined' && PersistDB.getChapters) ? PersistDB.getChapters() : [];
-      document.getElementById('chCount').textContent = ch.length;
-      document.getElementById('epCount').textContent = ch.reduce((s, c) => s + ((c.songs || []).length), 0);
-    } catch(e) { console.warn('Stats update failed:', e); }
-  }, 1000);
-});
-</script>
 </body>
 </html>
 <!-- redeploy 1775735840 -->
