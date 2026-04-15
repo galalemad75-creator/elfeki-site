@@ -1,16 +1,15 @@
 {
   "chapters": [
     {
-      "id": 1,
-      "name": "Positive Thinking",
-      "icon": "☀️",
+      "id": 1, "name": "Positive Thinking", "icon": "☀️",
       "songs": [
         {"id":1,"title":"The Essence of Positive Thinking","audio":"https://res.cloudinary.com/dse1s0loh/video/upload/v1776264523/elfeki/audio/song1_u73ak4.mp3","image":"https://res.cloudinary.com/dse1s0loh/image/upload/v1776264397/elfeki/covers/screenshot_pibuax.png","file_path":"elfeki/audio/song1_u73ak4","created":"2026-04-15T14:45:00Z","duration":"3:38","plays":0},
         {"id":2,"title":"Transforming Lives with Positivity","audio":"https://res.cloudinary.com/dse1s0loh/video/upload/v1776264751/elfeki/audio/song2_c3wmb6.mp3","image":"https://res.cloudinary.com/dse1s0loh/image/upload/v1776264752/elfeki/covers/song2_cover_pxipat.png","file_path":"elfeki/audio/song2_c3wmb6","created":"2026-04-15T14:50:00Z","duration":"2:02","plays":0},
-        {"id":3,"title":"Techniques for Positive Thoughts","audio":"https://res.cloudinary.com/dse1s0loh/video/upload/v1776265062/elfeki/audio/song3_ix8dg5.mp3","image":"https://res.cloudinary.com/dse1s0loh/image/upload/v1776265062/elfeki/covers/song3_cover_jfnqlp.png","file_path":"elfeki/audio/song3_ix8dg5","created":"2026-04-15T14:56:00Z","duration":"2:09","plays":0}
+        {"id":3,"title":"Techniques for Positive Thoughts","audio":"https://res.cloudinary.com/dse1s0loh/video/upload/v1776265062/elfeki/audio/song3_ix8dg5.mp3","image":"https://res.cloudinary.com/dse1s0loh/image/upload/v1776265062/elfeki/covers/song3_cover_jfnqlp.png","file_path":"elfeki/audio/song3_ix8dg5","created":"2026-04-15T14:56:00Z","duration":"2:09","plays":0},
+        {"id":4,"title":"Overcoming Negative Thoughts","audio":"https://res.cloudinary.com/dse1s0loh/video/upload/v1776265450/elfeki/audio/song4_hecasg.mp3","image":"https://res.cloudinary.com/dse1s0loh/image/upload/v1776265451/elfeki/covers/song4_cover_pjubqi.png","file_path":"elfeki/audio/song4_hecasg","created":"2026-04-15T15:03:00Z","duration":"1:17","plays":0}
       ]
     }
   ],
-  "nextId": { "chapter": 2, "song": 4 },
+  "nextId": { "chapter": 2, "song": 5 },
   "admin": { "email": "galalemad75@gmail.com", "password": "ElFeki2026!" }
 }
