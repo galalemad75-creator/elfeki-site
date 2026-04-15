@@ -14,6 +14,7 @@ let isPlaying = false;
 // Playlist
 let playlist = [];           // [{id, title, audio, image, chapterName, chapterId}]
 let playlistIndex = -1;
+let isPlaylistMode = false;
 
 // Background music
 let bgMusic = null;
@@ -154,7 +155,7 @@ function showSongsView(chapter) {
 
       card.querySelector('.song-add-btn').addEventListener('click', function(e) {
         e.stopPropagation();
-        addToPlaylist(song, (chapter.title || chapter.name || ''), chapter.id);
+        addToPlaylistBtn(chapter.id, i);
       });
 
       card.addEventListener('click', function() { playSong(i); });
@@ -367,25 +368,59 @@ function updateNowPlaying(song, chapterName) {
 
 // ─── Playback Controls (Cross-Chapter) ───────────────────────────────────────
 function nextTrack() {
-  if (playlist.length > 0) {
-    playlistIndex = (playlistIndex + 1) % playlist.length;
-    playSongFromPlaylist(playlistIndex);
-  } else if (currentChapter) {
-    const songs = currentChapter.songs || [];
-    currentSongIndex = (currentSongIndex + 1) % songs.length;
-    playSong(currentSongIndex);
+  if (isPlaylistMode && playlist.length > 0) {
+    // ← التالي في القائمة
+    const next = playlistIndex + 1;
+    if (next < playlist.length) playSongFromPlaylist(next);
+    else playSongFromPlaylist(0);
+    return;
+  }
+  // ← التالي في الفصل، أو انتقل للفصل اللي بعده
+  if (currentSongIndex + 1 < currentChapter.songs.length) {
+    playSong(currentSongIndex + 1);
+  } else {
+    // انتقل للفصل التالي
+    const chIdx = chapters.findIndex(c => c.id === currentChapter.id);
+    for (let i = chIdx + 1; i < chapters.length; i++) {
+      if (chapters[i].songs.length > 0) {
+        currentChapter = chapters[i];
+        openChapter(currentChapter.id);
+        setTimeout(() => playSong(0), 100);
+        return;
+      }
+    }
   }
 }
 
 function prevTrack() {
-  if (playlist.length > 0) {
-    playlistIndex = (playlistIndex - 1 + playlist.length) % playlist.length;
-    playSongFromPlaylist(playlistIndex);
-  } else if (currentChapter) {
-    const songs = currentChapter.songs || [];
-    currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length;
-    playSong(currentSongIndex);
+  if (isPlaylistMode && playlist.length > 0) {
+    // ← السابق في القائمة
+    const prev = playlistIndex - 1;
+    if (prev >= 0) playSongFromPlaylist(prev);
+    else playSongFromPlaylist(playlist.length - 1);
+    return;
   }
+  // ← السابق في الفصل، أو انتقل للفصل اللي قبله
+  if (currentSongIndex > 0) {
+    playSong(currentSongIndex - 1);
+  } else {
+    // انتقل للفصل السابق (آخر أغنية فيه)
+    const chIdx = chapters.findIndex(c => c.id === currentChapter.id);
+    for (let i = chIdx - 1; i >= 0; i--) {
+      if (chapters[i].songs.length > 0) {
+        currentChapter = chapters[i];
+        openChapter(currentChapter.id);
+        setTimeout(() => playSong(chapters[i].songs.length - 1), 100);
+        return;
+      }
+    }
+  }
+}
+
+// فتح فصل وعرض أغانيه
+function openChapter(chapterId) {
+  var ch = chapters.find(c => c.id === chapterId);
+  if (ch) showSongsView(ch);
 }
 
 // ─── Playlist System ─────────────────────────────────────────────────────────
@@ -436,9 +471,36 @@ function removeFromPlaylist(index) {
 function clearPlaylist() {
   playlist = [];
   playlistIndex = -1;
+  isPlaylistMode = false;
   savePlaylist();
   renderPlaylistPanel();
   showToast('Playlist cleared');
+}
+
+// ════════ إضافة أغنية لقائمة التشغيل (زر 📋) ════════
+function addToPlaylistBtn(chapterId, songIdx) {
+  const song = chapters.find(c => c.id === chapterId).songs[songIdx];
+  if (playlist.some(s => s.audio === song.audio)) {
+    showToast('Already in playlist');
+    return; // منع التكرار
+  }
+  playlist.push({ title: song.title, audio: song.audio, image: song.image });
+  savePlaylist();
+  renderPlaylistPanel();
+  showToast('Added to playlist ✓');
+}
+
+// ════════ إعادة ترتيب أغنية في القائمة ════════
+function moveInPlaylist(from, to) {
+  if (from < 0 || from >= playlist.length || to < 0 || to >= playlist.length) return;
+  const item = playlist.splice(from, 1)[0];
+  playlist.splice(to, 0, item);
+  // تحديث المؤشر
+  if (playlistIndex === from) playlistIndex = to;
+  else if (from < playlistIndex && to >= playlistIndex) playlistIndex--;
+  else if (from > playlistIndex && to <= playlistIndex) playlistIndex++;
+  savePlaylist();
+  renderPlaylistPanel();
 }
 
 function savePlaylist() {
@@ -497,6 +559,7 @@ function buildPlaylistFromAll(shuffle) {
 
 function playSongFromPlaylist(index) {
   if (index < 0 || index >= playlist.length) return;
+  isPlaylistMode = true;
   playlistIndex = index;
   const item = playlist[index];
 
