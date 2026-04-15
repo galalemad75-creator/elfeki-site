@@ -8,16 +8,22 @@
         {
           "id": 1,
           "title": "The Essence of Positive Thinking",
-          "audio": "",
+          "audio": "https://res.cloudinary.com/dse1s0loh/video/upload/v1776264523/elfeki/audio/song1_u73ak4.mp3",
           "image": "https://res.cloudinary.com/dse1s0loh/image/upload/v1776264397/elfeki/covers/screenshot_pibuax.png",
-          "file_path": "elfeki/covers/screenshot_pibuax",
+          "file_path": "elfeki/audio/song1_u73ak4",
           "created": "2026-04-15T14:45:00Z",
-          "duration": "",
+          "duration": "3:38",
           "plays": 0
         }
       ]
     }
   ],
-  "nextId": { "chapter": 2, "song": 2 },
-  "admin": { "email": "galalemad75@gmail.com", "password": "ElFeki2026!" }
+  "nextId": {
+    "chapter": 2,
+    "song": 2
+  },
+  "admin": {
+    "email": "galalemad75@gmail.com",
+    "password": "ElFeki2026!"
+  }
 }
