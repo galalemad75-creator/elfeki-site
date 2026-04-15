@@ -126,29 +126,61 @@ function renderTrackList(containerId,songs,chapterId){
     }).join('')}`;
 }
 
-// ── Cover Background ──
+// ── Cover Background (fills entire page) ──
 function setCoverBackground(imgUrl) {
-  let bg = document.getElementById('cover-bg');
-  if (!bg) {
-    bg = document.createElement('div');
-    bg.id = 'cover-bg';
-    bg.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:-1;pointer-events:none;transition:opacity 0.8s ease;opacity:0;background-size:cover;background-position:center;background-repeat:no-repeat;';
-    document.body.prepend(bg);
-  }
-  let overlay = document.getElementById('cover-bg-overlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'cover-bg-overlay';
-    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:-1;pointer-events:none;background:rgba(0,0,0,0.55);backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);transition:opacity 0.8s ease;opacity:0;';
-    document.body.prepend(overlay);
-  }
+  const mainEl = document.getElementById('main-content');
+  if (!mainEl) return;
+
   if (imgUrl) {
-    bg.style.backgroundImage = `url(${imgUrl})`;
-    bg.style.opacity = '1';
-    overlay.style.opacity = '1';
+    // Set background image on main-content with blur overlay
+    mainEl.style.position = 'relative';
+    mainEl.style.backgroundImage = `url(${imgUrl})`;
+    mainEl.style.backgroundSize = 'cover';
+    mainEl.style.backgroundPosition = 'center';
+    mainEl.style.backgroundAttachment = 'fixed';
+
+    // Add/update dark overlay for readability
+    let overlay = document.getElementById('main-bg-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'main-bg-overlay';
+      mainEl.prepend(overlay);
+    }
+    overlay.style.cssText = `
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(18,18,18,0.95) 40%, rgba(18,18,18,0.99) 100%);
+      backdrop-filter: blur(60px) saturate(150%); -webkit-backdrop-filter: blur(60px) saturate(150%);
+      z-index: 0; pointer-events: none;
+    `;
+
+    // Also set player bar background image
+    const playerBar = document.getElementById('player-bar');
+    if (playerBar) {
+      playerBar.style.backgroundImage = `url(${imgUrl})`;
+      playerBar.style.backgroundSize = 'cover';
+      playerBar.style.backgroundPosition = 'center';
+      let pOverlay = playerBar.querySelector('.player-bg-overlay');
+      if (!pOverlay) {
+        pOverlay = document.createElement('div');
+        pOverlay.className = 'player-bg-overlay';
+        playerBar.prepend(pOverlay);
+      }
+      pOverlay.style.cssText = `
+        position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(24,24,24,0.85); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+        z-index: 0;
+      `;
+    }
   } else {
-    bg.style.opacity = '0';
-    overlay.style.opacity = '0';
+    mainEl.style.backgroundImage = '';
+    const overlay = document.getElementById('main-bg-overlay');
+    if (overlay) overlay.remove();
+    const playerBar = document.getElementById('player-bar');
+    if (playerBar) {
+      playerBar.style.backgroundImage = '';
+      const pOverlay = playerBar.querySelector('.player-bg-overlay');
+      if (pOverlay) pOverlay.remove();
+    }
   }
 }
 function playCourse(chapterId,songIndex){
