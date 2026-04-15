@@ -1228,3 +1228,45 @@ body {
 @media (max-width: 768px) {
   .songs-grid { grid-template-columns: repeat(2, 1fr); }
 }
+/* Playlist button and simple styles */
+#np-playlist-btn {
+    cursor: pointer;
+}
+
+.song-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: var(--bg-card);
+    border-radius: 12px;
+    margin-bottom: 8px;
+}
+
+.song-info h4 {
+    margin: 0 0 4px 0;
+}
+
+.song-info p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.song-actions button {
+    margin-left: 8px;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    background: var(--accent);
+    color: white;
+}
+
+.song-actions button:first-child {
+    background: var(--accent);
+}
+
+.song-actions button:last-child {
+    background: #2ecc71;
+}
