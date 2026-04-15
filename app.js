@@ -59,7 +59,7 @@ function renderHome(){
   const allEp=[];
   CHAPTERS.forEach((c,ci)=>c.songs&&c.songs.forEach((s,si)=>allEp.push({...s,chapter:c,chapterId:c.id,songIndex:si,color:COURSE_COLORS[ci%COURSE_COLORS.length]})));
   renderCardGrid('popular-grid',allEp.slice(0,6).map(e=>({
-    id:e.id,icon:e.chapter.icon||'📚',title:e.title,subtitle:e.chapter.name,
+    id:e.id,icon:e.chapter.icon||'📚',image:e.image||'',title:e.title,subtitle:e.chapter.name,
     color:e.color,onclick:`playCourse(${e.chapterId},${e.songIndex})`,playBtn:`event.stopPropagation();playCourse(${e.chapterId},${e.songIndex})`
   })));
 
@@ -69,7 +69,8 @@ function renderHome(){
     renderCardGrid('recent-grid',recentlyPlayed.slice(0,6).map(r=>{
       const ch=CHAPTERS.find(c=>c.id==r.chapterId);if(!ch||!ch.songs[r.songIndex])return null;
       const ci=CHAPTERS.indexOf(ch);
-      return{id:ch.songs[r.songIndex].id,icon:ch.icon||'📚',title:ch.songs[r.songIndex].title,subtitle:ch.name,color:COURSE_COLORS[ci%COURSE_COLORS.length],
+      const s=ch.songs[r.songIndex];
+      return{id:s.id,icon:ch.icon||'📚',image:s.image||'',title:s.title,subtitle:ch.name,color:COURSE_COLORS[ci%COURSE_COLORS.length],
         onclick:`playCourse(${ch.id},${r.songIndex})`,playBtn:`event.stopPropagation();playCourse(${ch.id},${r.songIndex})`
       };
     }).filter(Boolean));
@@ -78,14 +79,19 @@ function renderHome(){
 
 function renderCardGrid(containerId,items){
   const container=document.getElementById(containerId);if(!container)return;
-  container.innerHTML=items.map(item=>`
+  container.innerHTML=items.map(item=>{
+    const imgContent = item.image
+      ? `<img src="${item.image}" style="width:100%;height:100%;object-fit:cover;" alt="${item.title}">`
+      : item.icon;
+    return `
     <div class="card" onclick="${item.onclick}">
-      <div class="card-img" style="background:linear-gradient(135deg,${item.color}22,${item.color}44);">${item.icon}
+      <div class="card-img" style="${!item.image ? 'background:linear-gradient(135deg,'+item.color+'22,'+item.color+'44);' : ''}">${imgContent}
         <button class="card-play" onclick="${item.playBtn}">▶</button>
       </div>
       <div class="card-title">${item.title}</div>
       <div class="card-subtitle">${item.subtitle}</div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 // ── Course Detail ──
@@ -132,14 +138,11 @@ function setCoverBackground(imgUrl) {
   if (!mainEl) return;
 
   if (imgUrl) {
-    // Set background image on main-content with blur overlay
     mainEl.style.position = 'relative';
     mainEl.style.backgroundImage = `url(${imgUrl})`;
     mainEl.style.backgroundSize = 'cover';
     mainEl.style.backgroundPosition = 'center';
-    mainEl.style.backgroundAttachment = 'fixed';
 
-    // Add/update dark overlay for readability
     let overlay = document.getElementById('main-bg-overlay');
     if (!overlay) {
       overlay = document.createElement('div');
@@ -148,12 +151,11 @@ function setCoverBackground(imgUrl) {
     }
     overlay.style.cssText = `
       position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-      background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(18,18,18,0.95) 40%, rgba(18,18,18,0.99) 100%);
-      backdrop-filter: blur(60px) saturate(150%); -webkit-backdrop-filter: blur(60px) saturate(150%);
+      background: rgba(18,18,18,0.88);
+      backdrop-filter: blur(50px) saturate(120%); -webkit-backdrop-filter: blur(50px) saturate(120%);
       z-index: 0; pointer-events: none;
     `;
 
-    // Also set player bar background image
     const playerBar = document.getElementById('player-bar');
     if (playerBar) {
       playerBar.style.backgroundImage = `url(${imgUrl})`;
@@ -167,7 +169,7 @@ function setCoverBackground(imgUrl) {
       }
       pOverlay.style.cssText = `
         position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(24,24,24,0.85); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+        background: rgba(24,24,24,0.92); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
         z-index: 0;
       `;
     }
@@ -339,7 +341,7 @@ function filterLibrary(type,btn){
   document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));btn.classList.add('active');
   if(type==='all'||type==='courses'){renderLibrary();return;}
   if(type==='liked'){
-    const allEp=[];CHAPTERS.forEach((c,ci)=>c.songs&&c.songs.forEach((s,si)=>{if(liked.includes(String(s.id)))allEp.push({id:s.id,icon:c.icon||'📚',title:s.title,subtitle:c.name,color:COURSE_COLORS[ci%COURSE_COLORS.length],onclick:`playCourse(${c.id},${si})`,playBtn:`event.stopPropagation();playCourse(${c.id},${si})`});}));
+    const allEp=[];CHAPTERS.forEach((c,ci)=>c.songs&&c.songs.forEach((s,si)=>{if(liked.includes(String(s.id)))allEp.push({id:s.id,icon:c.icon||'📚',image:s.image||'',title:s.title,subtitle:c.name,color:COURSE_COLORS[ci%COURSE_COLORS.length],onclick:`playCourse(${c.id},${si})`,playBtn:`event.stopPropagation();playCourse(${c.id},${si})`});}));
     renderCardGrid('library-grid',allEp);
   }
 }

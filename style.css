@@ -226,6 +226,7 @@ img { display: block; }
   background: var(--bg-elevated);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   position: relative;
+  z-index: 1;
   transition: background-image 0.6s ease;
   background-size: cover;
   background-position: center;
