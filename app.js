@@ -65,7 +65,7 @@ function updateThemeIcon(theme) {
 // ─── Navigation ──────────────────────────────────────────────────────────────
 function initNav() {
   const hamburger = document.getElementById('hamburger');
-  const navLinks = document.getElementById('nav-links');
+  const navLinks = document.getElementById('navMenu');
   if (hamburger && navLinks) {
     hamburger.addEventListener('click', () => {
       navLinks.classList.toggle('open');
@@ -95,7 +95,7 @@ function showHome() {
   const hero = document.querySelector('.hero');
   const features = document.querySelector('.features');
   const chaptersSection = document.getElementById('chapters') || document.querySelector('.chapters-section');
-  const cta = document.querySelector('.cta');
+  const cta = document.querySelector('.cta-section');
   const songsView = document.getElementById('songs-view');
 
   [hero, features, chaptersSection, cta].forEach(el => { if (el) el.style.display = ''; });
@@ -111,7 +111,7 @@ function showSongsView(chapter) {
   const hero = document.querySelector('.hero');
   const features = document.querySelector('.features');
   const chaptersSection = document.getElementById('chapters') || document.querySelector('.chapters-section');
-  const cta = document.querySelector('.cta');
+  const cta = document.querySelector('.cta-section');
   const songsView = document.getElementById('songs-view');
 
   [hero, features, chaptersSection, cta].forEach(el => { if (el) el.style.display = 'none'; });
@@ -282,14 +282,14 @@ function updateNowPlaying(song, chapterName) {
   if (!bar) return;
   bar.style.display = '';
 
-  const titleEl = bar.querySelector('.np-title') || document.getElementById('np-title');
+  const titleEl = document.getElementById('npTitle');
   if (titleEl) titleEl.textContent = song.title || '';
 
-  const chapterEl = bar.querySelector('.np-chapter') || document.getElementById('np-chapter');
+  const chapterEl = document.getElementById('npSub');
   if (chapterEl) chapterEl.textContent = chapterName || '';
 
-  const imgEl = bar.querySelector('.np-img') || document.getElementById('np-img');
-  if (imgEl && (song.image || song.cover)) imgEl.src = song.image || song.cover;
+  const imgEl = document.getElementById('npImg');
+  if (imgEl && (song.image || song.cover)) { imgEl.src = song.image || song.cover; imgEl.style.display = ''; }
 
   // Play/pause button
   const ppBtn = document.getElementById('np-play-pause');
