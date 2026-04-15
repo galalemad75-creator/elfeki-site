@@ -108,59 +108,59 @@ function showHome() {
 }
 
 function showSongsView(chapter) {
-  const hero = document.querySelector('.hero');
-  const features = document.querySelector('.features');
-  const chaptersSection = document.getElementById('chapters') || document.querySelector('.chapters-section');
-  const cta = document.querySelector('.cta-section');
-  const songsView = document.getElementById('songs-view');
+  try {
+    // Hide optional sections safely
+    var hero = document.querySelector('.hero');
+    var features = document.querySelector('.features');
+    var chaptersSection = document.getElementById('chapters');
+    var cta = document.querySelector('.cta-section');
+    if (hero) hero.style.display = 'none';
+    if (features) features.style.display = 'none';
+    if (chaptersSection) chaptersSection.style.display = 'none';
+    if (cta) cta.style.display = 'none';
 
-  [hero, features, chaptersSection, cta].forEach(el => { if (el) el.style.display = 'none'; });
+    var songsView = document.getElementById('songs-view');
+    if (!songsView) { console.error('songs-view not found'); return; }
+    songsView.style.display = 'block';
 
-  if (!songsView) return;
-  songsView.style.display = '';
+    // Header
+    var headerEl = document.getElementById('songs-chapter-title');
+    if (headerEl) headerEl.textContent = (chapter && (chapter.title || chapter.name)) || 'Chapter';
 
-  // Header
-  const headerEl = document.getElementById('songs-chapter-title') || songsView.querySelector('.songs-header h2');
-  if (headerEl) headerEl.textContent = chapter.title || chapter.name || 'Chapter';
+    currentChapter = chapter;
 
-  // Back button — already exists in HTML, wired in initChapters()
+    // Render song cards
+    var grid = document.getElementById('songs-grid');
+    if (!grid) { console.error('songs-grid not found'); return; }
+    grid.innerHTML = '';
 
-  // Play-all / shuffle-all buttons — already in HTML, just update context
-  currentChapter = chapter;
+    var songs = (chapter && chapter.songs) || [];
+    songs.forEach(function(song, i) {
+      var card = document.createElement('div');
+      card.className = 'song-card';
+      card.innerHTML = '<button class="song-play-btn" data-index="' + i + '" aria-label="Play ' + (song.title || '') + '">▶</button>'
+        + '<span class="song-title">' + (song.title || 'Untitled') + '</span>'
+        + '<button class="song-add-btn" data-index="' + i + '" aria-label="Add to playlist" title="Add to playlist">📋</button>';
 
-  // Render song cards
-  const grid = document.getElementById('songs-grid') || songsView.querySelector('.songs-grid');
-  if (!grid) return;
-  grid.innerHTML = '';
+      card.querySelector('.song-play-btn').addEventListener('click', function(e) {
+        e.stopPropagation();
+        playSong(i);
+      });
 
-  const songs = chapter.songs || [];
-  songs.forEach((song, i) => {
-    const card = document.createElement('div');
-    card.className = 'song-card';
-    card.innerHTML = `
-      <button class="song-play-btn" data-index="${i}" aria-label="Play ${song.title}">▶</button>
-      <span class="song-title">${song.title}</span>
-      <button class="song-add-btn" data-index="${i}" aria-label="Add to playlist" title="Add to playlist">📋</button>
-    `;
+      card.querySelector('.song-add-btn').addEventListener('click', function(e) {
+        e.stopPropagation();
+        addToPlaylist(song, (chapter.title || chapter.name || ''), chapter.id);
+      });
 
-    // Play button
-    card.querySelector('.song-play-btn').addEventListener('click', () => {
-      playSong(i);
+      card.addEventListener('click', function() { playSong(i); });
+
+      grid.appendChild(card);
     });
 
-    // Add to playlist button
-    card.querySelector('.song-add-btn').addEventListener('click', (e) => {
-      e.stopPropagation();
-      addToPlaylist(song, chapter.title || chapter.name, chapter.id);
-    });
-
-    // Click card to play
-    card.addEventListener('click', () => playSong(i));
-
-    grid.appendChild(card);
-  });
-
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch(err) {
+    console.error('showSongsView error:', err);
+  }
 }
 
 // ─── Chapters Grid ───────────────────────────────────────────────────────────
@@ -177,22 +177,24 @@ function initChapters() {
 }
 
 function renderChapters() {
-  const grid = document.getElementById('chapters-grid');
+  var grid = document.getElementById('chapters-grid');
   if (!grid) return;
   grid.innerHTML = '';
 
-  chapters.forEach(ch => {
-    const card = document.createElement('div');
+  chapters.forEach(function(ch) {
+    var card = document.createElement('div');
     card.className = 'chapter-card';
-    const icon = ch.icon || '📖';
-    const name = ch.name || ch.title || 'Chapter';
-    const songCount = (ch.songs || []).length;
-    card.innerHTML = `
-      <span class="chapter-icon">${icon}</span>
-      <h3>${name}</h3>
-      <span class="chapter-songs-count">${songCount} episode${songCount !== 1 ? 's' : ''}</span>
-    `;
-    card.addEventListener('click', () => showSongsView(ch));
+    var icon = ch.icon || '📖';
+    var name = ch.name || ch.title || 'Chapter';
+    var songCount = (ch.songs || []).length;
+    card.innerHTML = '<span class="chapter-icon">' + icon + '</span>'
+      + '<h3>' + name + '</h3>'
+      + '<span class="chapter-songs-count">' + songCount + ' episode' + (songCount !== 1 ? 's' : '') + '</span>';
+
+    card.addEventListener('click', function() {
+      try { showSongsView(ch); } catch(err) { console.error('Chapter click error:', err); }
+    });
+
     grid.appendChild(card);
   });
 }
