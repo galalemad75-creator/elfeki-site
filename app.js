@@ -1,5 +1,5 @@
 // ============================================
-// FULL FIXED app.js with COMPLETE PLAYLIST SYSTEM
+// FIXED app.js - SIMPLE & WORKING
 // ============================================
 
 let chapters = [];
@@ -8,23 +8,18 @@ let currentSongIndex = -1;
 let audio = new Audio();
 let isPlaying = false;
 
-// Playlist variables
+// Playlist
 let playlist = [];
 let playlistIndex = -1;
 let isPlaylistMode = false;
 
 // DOM Elements
-let audioPlayer;
-let playPauseBtn, prevBtn, nextBtn, playlistBtn, bgMusicBtn, themeToggle;
+let playPauseBtn, prevBtn, nextBtn, playlistBtn, themeToggle;
 let npTitle, npSub, npProgress, npCurrentTime, npDuration;
 let backBtn;
 
-// Background music
-let bgMusic = null;
-let bgMusicEnabled = true;
-
-// ========== HELPER FUNCTIONS ==========
-function showToast(message, type = 'info') {
+// ========== HELPER ==========
+function showToast(msg, type = 'info') {
     let toast = document.getElementById('toast');
     if (!toast) {
         toast = document.createElement('div');
@@ -32,7 +27,7 @@ function showToast(message, type = 'info') {
         toast.className = 'toast';
         document.body.appendChild(toast);
     }
-    toast.textContent = message;
+    toast.textContent = msg;
     toast.className = `toast ${type}`;
     setTimeout(() => toast.classList.add('show'), 10);
     setTimeout(() => toast.classList.remove('show'), 3000);
@@ -52,236 +47,103 @@ function savePlaylist() {
     localStorage.setItem('elfeki_playlist', JSON.stringify(playlist));
 }
 
-function loadPlaylistFromStorage() {
-    const saved = localStorage.getItem('elfeki_playlist');
-    if (saved) {
-        try {
-            playlist = JSON.parse(saved);
-        } catch(e) { playlist = []; }
-    } else {
-        playlist = [];
-    }
-}
-
-// ========== PLAYLIST RENDERING ==========
-function renderPlaylist() {
-    const playlistContainer = document.getElementById('playlist-panel');
-    if (!playlistContainer) return;
-    
-    if (playlist.length === 0) {
-        playlistContainer.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:20px">Your playlist is empty. Add episodes using the + button.</p>';
+// ========== PLAYLIST FUNCTIONS ==========
+function addToPlaylist(song, chapterName) {
+    if (playlist.some(s => s.audio === song.audio)) {
+        showToast(`"${song.title}" already in playlist`, 'info');
         return;
     }
-    
-    playlistContainer.innerHTML = playlist.map((song, idx) => `
-        <div class="playlist-item" data-playlist-index="${idx}" draggable="true">
-            <div class="playlist-item-drag">⋮⋮</div>
-            <div class="playlist-item-img">
-                <img src="${song.image || 'https://via.placeholder.com/40?text=🎵'}" onerror="this.src='https://via.placeholder.com/40?text=🎵'">
-            </div>
-            <div class="playlist-item-info" data-playlist-index="${idx}">
-                <div class="playlist-item-title">${escapeHtml(song.title)}</div>
-                <div class="playlist-item-chapter">${escapeHtml(song.chapterName || 'Unknown')}</div>
-            </div>
-            <div class="playlist-item-actions">
-                <button class="playlist-play-btn" data-index="${idx}" title="Play">▶</button>
-                <button class="playlist-remove-btn" data-index="${idx}" title="Remove">🗑</button>
-            </div>
-        </div>
-    `).join('');
-    
-    // Add event listeners to playlist buttons
-    document.querySelectorAll('.playlist-play-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const idx = parseInt(btn.dataset.index);
-            playFromPlaylist(idx);
-        });
-    });
-    
-    document.querySelectorAll('.playlist-remove-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const idx = parseInt(btn.dataset.index);
-            playlist.splice(idx, 1);
-            savePlaylist();
-            renderPlaylist();
-            showToast('Removed from playlist', 'info');
-            if (isPlaylistMode && playlistIndex === idx) {
-                isPlaylistMode = false;
-                playlistIndex = -1;
-            } else if (isPlaylistMode && playlistIndex > idx) {
-                playlistIndex--;
-            }
-        });
-    });
-    
-    // Drag and drop for reordering
-    const items = document.querySelectorAll('.playlist-item');
-    items.forEach(item => {
-        item.addEventListener('dragstart', (e) => {
-            e.dataTransfer.setData('text/plain', item.dataset.playlistIndex);
-            item.classList.add('dragging');
-        });
-        item.addEventListener('dragend', (e) => {
-            item.classList.remove('dragging');
-        });
-        item.addEventListener('dragover', (e) => {
-            e.preventDefault();
-        });
-        item.addEventListener('drop', (e) => {
-            e.preventDefault();
-            const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
-            const toIdx = parseInt(item.dataset.playlistIndex);
-            if (fromIdx !== toIdx) {
-                const [moved] = playlist.splice(fromIdx, 1);
-                playlist.splice(toIdx, 0, moved);
-                savePlaylist();
-                renderPlaylist();
-                showToast('Playlist reordered', 'success');
-            }
-        });
-    });
-}
-
-// ========== PLAYLIST CORE FUNCTIONS ==========
-function addToPlaylist(song, chapterName, chapterId) {
-    // Prevent duplicates
-    if (playlist.some(s => s.audio === song.audio)) {
-        showToast(`"${song.title}" is already in your playlist`, 'info');
-        return false;
-    }
-    
     playlist.push({
-        id: Date.now(),
         title: song.title,
         audio: song.audio,
         image: song.image || '',
-        chapterName: chapterName,
-        chapterId: chapterId
+        chapterName: chapterName
     });
     savePlaylist();
-    renderPlaylist();
     showToast(`Added "${song.title}" to playlist`, 'success');
-    return true;
 }
 
-function removeFromPlaylist(index) {
-    playlist.splice(index, 1);
-    savePlaylist();
-    renderPlaylist();
-    if (isPlaylistMode && playlistIndex === index) {
-        isPlaylistMode = false;
-        playlistIndex = -1;
-    } else if (isPlaylistMode && playlistIndex > index) {
-        playlistIndex--;
+function showPlaylist() {
+    if (playlist.length === 0) {
+        showToast('Playlist is empty', 'info');
+        return;
     }
-    showToast('Removed from playlist', 'info');
-}
-
-function moveInPlaylist(from, to) {
-    if (from === to) return;
-    const [item] = playlist.splice(from, 1);
-    playlist.splice(to, 0, item);
-    savePlaylist();
-    renderPlaylist();
-    if (isPlaylistMode && playlistIndex === from) {
-        playlistIndex = to;
-    } else if (isPlaylistMode && playlistIndex > from && playlistIndex <= to) {
-        playlistIndex--;
-    } else if (isPlaylistMode && playlistIndex < from && playlistIndex >= to) {
-        playlistIndex++;
-    }
-    showToast('Playlist reordered', 'success');
+    let msg = "📋 MY PLAYLIST:\n\n";
+    playlist.forEach((song, i) => {
+        msg += `${i+1}. ${song.title} - ${song.chapterName}\n`;
+    });
+    msg += "\n🎵 To play: Use 'Play from Playlist' button below";
+    alert(msg);
 }
 
 function playFromPlaylist(index) {
-    if (!playlist[index] || !playlist[index].audio) {
-        showToast('Cannot play this episode', 'error');
-        return;
-    }
-    
+    if (!playlist[index]) return;
     isPlaylistMode = true;
     playlistIndex = index;
     const song = playlist[index];
-    
     audio.src = song.audio;
-    audio.load();
-    audio.play().catch(e => console.error("Playback failed:", e));
+    audio.play();
     isPlaying = true;
     if (playPauseBtn) playPauseBtn.textContent = '⏸';
-    
-    // Update now playing bar
-    if (npTitle) npTitle.textContent = song.title || 'Unknown Title';
-    if (npSub) npSub.textContent = song.chapterName || 'Playlist';
-    
-    // Find and set current chapter for context (optional)
-    if (song.chapterId) {
-        currentChapter = chapters.find(c => c.id === song.chapterId);
-        if (currentChapter && currentChapter.songs) {
-            const songInChapter = currentChapter.songs.find(s => s.audio === song.audio);
-            if (songInChapter) {
-                currentSongIndex = currentChapter.songs.indexOf(songInChapter);
-            }
-        }
-    }
+    if (npTitle) npTitle.textContent = song.title;
+    if (npSub) npSub.textContent = song.chapterName;
 }
 
-// ========== SONG PLAYBACK (Chapter Mode) ==========
+// ========== PLAYBACK ==========
 function playSong(chapter, songIndex) {
     if (!chapter || !chapter.songs || !chapter.songs[songIndex]) return;
     const song = chapter.songs[songIndex];
     if (!song.audio) {
-        showToast('Error: No audio URL found for this episode.', 'error');
+        showToast('No audio URL', 'error');
         return;
     }
-    
-    // Exit playlist mode when playing directly from chapter
     isPlaylistMode = false;
     currentChapter = chapter;
     currentSongIndex = songIndex;
-    
     audio.src = song.audio;
-    audio.load();
-    audio.play().catch(e => console.error("Playback failed:", e));
+    audio.play();
     isPlaying = true;
     if (playPauseBtn) playPauseBtn.textContent = '⏸';
-    
-    // Update now playing bar
-    if (npTitle) npTitle.textContent = song.title || 'Unknown Title';
-    if (npSub) npSub.textContent = chapter.name || 'Unknown Course';
+    if (npTitle) npTitle.textContent = song.title;
+    if (npSub) npSub.textContent = chapter.name;
 }
 
-// ========== NEXT/PREV WITH SMART NAVIGATION ==========
-function nextTrack() {
-    // PLAYLIST MODE
-    if (isPlaylistMode && playlist.length > 0) {
-        let nextIndex = playlistIndex + 1;
-        if (nextIndex >= playlist.length) {
-            nextIndex = 0; // Loop back to beginning
+function togglePlayPause() {
+    if (!audio.src) {
+        if (chapters.length > 0 && chapters[0].songs?.length > 0) {
+            playSong(chapters[0], 0);
+        } else {
+            showToast('No episodes available', 'error');
         }
-        playFromPlaylist(nextIndex);
         return;
     }
-    
-    // CHAPTER MODE
-    if (!currentChapter || !currentChapter.songs || currentChapter.songs.length === 0) return;
-    
-    // Next song in current chapter
+    if (isPlaying) {
+        audio.pause();
+        if (playPauseBtn) playPauseBtn.textContent = '▶';
+    } else {
+        audio.play();
+        if (playPauseBtn) playPauseBtn.textContent = '⏸';
+    }
+    isPlaying = !isPlaying;
+}
+
+function nextTrack() {
+    // Playlist mode
+    if (isPlaylistMode && playlist.length > 0) {
+        let next = playlistIndex + 1;
+        if (next >= playlist.length) next = 0;
+        playFromPlaylist(next);
+        return;
+    }
+    // Chapter mode
+    if (!currentChapter || !currentChapter.songs) return;
     if (currentSongIndex + 1 < currentChapter.songs.length) {
         playSong(currentChapter, currentSongIndex + 1);
     } else {
-        // Move to next chapter that has songs
-        const currentChapterIndex = chapters.findIndex(c => c.id === currentChapter.id);
-        for (let i = currentChapterIndex + 1; i < chapters.length; i++) {
-            if (chapters[i].songs && chapters[i].songs.length > 0) {
-                playSong(chapters[i], 0);
-                return;
-            }
-        }
-        // If no next chapter, loop to first chapter with songs
-        for (let i = 0; i < currentChapterIndex; i++) {
-            if (chapters[i].songs && chapters[i].songs.length > 0) {
+        // Next chapter
+        const idx = chapters.findIndex(c => c.id === currentChapter.id);
+        for (let i = idx + 1; i < chapters.length; i++) {
+            if (chapters[i].songs?.length > 0) {
                 playSong(chapters[i], 0);
                 return;
             }
@@ -291,37 +153,23 @@ function nextTrack() {
 }
 
 function prevTrack() {
-    // PLAYLIST MODE
+    // Playlist mode
     if (isPlaylistMode && playlist.length > 0) {
-        let prevIndex = playlistIndex - 1;
-        if (prevIndex < 0) {
-            prevIndex = playlist.length - 1; // Loop to end
-        }
-        playFromPlaylist(prevIndex);
+        let prev = playlistIndex - 1;
+        if (prev < 0) prev = playlist.length - 1;
+        playFromPlaylist(prev);
         return;
     }
-    
-    // CHAPTER MODE
-    if (!currentChapter || !currentChapter.songs || currentChapter.songs.length === 0) return;
-    
-    // Previous song in current chapter
+    // Chapter mode
+    if (!currentChapter || !currentChapter.songs) return;
     if (currentSongIndex - 1 >= 0) {
         playSong(currentChapter, currentSongIndex - 1);
     } else {
-        // Move to previous chapter that has songs
-        const currentChapterIndex = chapters.findIndex(c => c.id === currentChapter.id);
-        for (let i = currentChapterIndex - 1; i >= 0; i--) {
-            if (chapters[i].songs && chapters[i].songs.length > 0) {
-                const lastSongIndex = chapters[i].songs.length - 1;
-                playSong(chapters[i], lastSongIndex);
-                return;
-            }
-        }
-        // If no previous chapter, loop to last chapter with songs
-        for (let i = chapters.length - 1; i > currentChapterIndex; i--) {
-            if (chapters[i].songs && chapters[i].songs.length > 0) {
-                const lastSongIndex = chapters[i].songs.length - 1;
-                playSong(chapters[i], lastSongIndex);
+        const idx = chapters.findIndex(c => c.id === currentChapter.id);
+        for (let i = idx - 1; i >= 0; i--) {
+            if (chapters[i].songs?.length > 0) {
+                const last = chapters[i].songs.length - 1;
+                playSong(chapters[i], last);
                 return;
             }
         }
@@ -329,163 +177,106 @@ function prevTrack() {
     }
 }
 
-function togglePlayPause() {
-    if (!audio.src) {
-        // If nothing is playing, try to play first song from first chapter
-        if (chapters.length > 0 && chapters[0].songs && chapters[0].songs.length > 0) {
-            playSong(chapters[0], 0);
-        } else {
-            showToast('No episodes available to play.', 'error');
-        }
-        return;
-    }
-    
-    if (isPlaying) {
-        audio.pause();
-        if (playPauseBtn) playPauseBtn.textContent = '▶';
-    } else {
-        audio.play().catch(e => console.error("Playback failed:", e));
-        if (playPauseBtn) playPauseBtn.textContent = '⏸';
-    }
-    isPlaying = !isPlaying;
-}
-
-// ========== NOW PLAYING BAR UPDATE ==========
-function updateNowPlayingProgress() {
-    if (audio.duration && !isNaN(audio.duration)) {
-        const percent = (audio.currentTime / audio.duration) * 100;
-        if (npProgress) npProgress.style.width = `${percent}%`;
-        
-        if (npCurrentTime) {
-            const mins = Math.floor(audio.currentTime / 60);
-            const secs = Math.floor(audio.currentTime % 60);
-            npCurrentTime.textContent = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-        }
-        
-        if (npDuration) {
-            const mins = Math.floor(audio.duration / 60);
-            const secs = Math.floor(audio.duration % 60);
-            npDuration.textContent = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-        }
-    }
-}
-
-// ========== UI RENDERING ==========
+// ========== UI RENDER ==========
 function renderChapters() {
     const grid = document.getElementById('chapters-grid');
     if (!grid) return;
-    
-    if (!chapters || chapters.length === 0) {
-        grid.innerHTML = '<p style="text-align:center;color:var(--text-muted);grid-column:1/-1;padding:40px">No courses found. Please add some via the admin panel.</p>';
+    if (!chapters.length) {
+        grid.innerHTML = '<p style="text-align:center;padding:40px">No courses yet. Add via admin panel.</p>';
         return;
     }
-    
     grid.innerHTML = chapters.map(ch => `
-        <div class="chapter-card animate-on-scroll" data-chapter-id="${ch.id}">
+        <div class="chapter-card" data-id="${ch.id}">
             <div class="chapter-icon">${ch.icon || '📚'}</div>
             <h3>${escapeHtml(ch.name)}</h3>
             <p>${ch.songs?.length || 0} episodes</p>
-            <button class="btn-view-chapter" data-chapter-id="${ch.id}">Browse Episodes →</button>
+            <button class="btn-view-chapter" data-id="${ch.id}">Browse →</button>
         </div>
     `).join('');
     
     document.querySelectorAll('.btn-view-chapter').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            const id = parseInt(btn.dataset.chapterId);
-            const chapter = chapters.find(c => c.id === id);
-            if (chapter) showSongsView(chapter);
+            const id = parseInt(btn.dataset.id);
+            const ch = chapters.find(c => c.id === id);
+            if (ch) showSongsView(ch);
         });
     });
 }
 
 function showSongsView(chapter) {
-    if (!chapter) return;
     currentChapter = chapter;
-    
     const songsView = document.getElementById('songs-view');
     const chaptersSection = document.getElementById('chapters');
-    const songsGrid = document.getElementById('songs-grid');
-    const songsChapterTitle = document.getElementById('songs-chapter-title');
+    const titleEl = document.getElementById('songs-chapter-title');
+    const grid = document.getElementById('songs-grid');
     
     if (songsView) songsView.style.display = 'block';
     if (chaptersSection) chaptersSection.style.display = 'none';
-    if (songsChapterTitle) songsChapterTitle.textContent = `${chapter.icon || '📚'} ${chapter.name}`;
+    if (titleEl) titleEl.textContent = `${chapter.icon || '📚'} ${chapter.name}`;
     
-    if (songsGrid) {
-        if (!chapter.songs || chapter.songs.length === 0) {
-            songsGrid.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:40px">No episodes in this course yet.</p>';
-            return;
-        }
-        
-        songsGrid.innerHTML = chapter.songs.map((song, idx) => `
-            <div class="song-card" data-song-index="${idx}">
-                <div class="song-art">
-                    <img src="${song.image || 'https://via.placeholder.com/80?text=No+Image'}" alt="${escapeHtml(song.title)}" onerror="this.src='https://via.placeholder.com/80?text=Audio'">
-                </div>
-                <div class="song-info">
-                    <h4>${escapeHtml(song.title)}</h4>
-                    <p>${chapter.name}</p>
-                </div>
-                <div class="song-actions">
-                    <button class="play-song-btn" data-song-index="${idx}" data-chapter-id="${chapter.id}">▶ Play</button>
-                    <button class="add-to-playlist-btn" data-song-index="${idx}" data-chapter-id="${chapter.id}">+ Playlist</button>
-                </div>
-            </div>
-        `).join('');
-        
-        document.querySelectorAll('.play-song-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const idx = parseInt(btn.dataset.songIndex);
-                const chId = parseInt(btn.dataset.chapterId);
-                const ch = chapters.find(c => c.id === chId);
-                if (ch && ch.songs && ch.songs[idx]) {
-                    playSong(ch, idx);
-                }
-            });
-        });
-        
-        document.querySelectorAll('.add-to-playlist-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const idx = parseInt(btn.dataset.songIndex);
-                const chId = parseInt(btn.dataset.chapterId);
-                const ch = chapters.find(c => c.id === chId);
-                if (ch && ch.songs && ch.songs[idx]) {
-                    addToPlaylist(ch.songs[idx], ch.name, ch.id);
-                }
-            });
-        });
+    if (!grid) return;
+    if (!chapter.songs?.length) {
+        grid.innerHTML = '<p style="text-align:center;padding:40px">No episodes yet.</p>';
+        return;
     }
+    
+    grid.innerHTML = chapter.songs.map((song, idx) => `
+        <div class="song-card">
+            <div class="song-info">
+                <h4>${escapeHtml(song.title)}</h4>
+                <p>${chapter.name}</p>
+            </div>
+            <div class="song-actions">
+                <button class="play-song" data-idx="${idx}">▶ Play</button>
+                <button class="add-playlist" data-idx="${idx}">+ Playlist</button>
+            </div>
+        </div>
+    `).join('');
+    
+    document.querySelectorAll('.play-song').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const idx = parseInt(btn.dataset.idx);
+            playSong(chapter, idx);
+        });
+    });
+    
+    document.querySelectorAll('.add-playlist').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const idx = parseInt(btn.dataset.idx);
+            addToPlaylist(chapter.songs[idx], chapter.name);
+        });
+    });
 }
 
-function goBackToCourses() {
+function goBack() {
     const songsView = document.getElementById('songs-view');
     const chaptersSection = document.getElementById('chapters');
-    const playlistPanel = document.getElementById('playlist-panel');
-    
     if (songsView) songsView.style.display = 'none';
     if (chaptersSection) chaptersSection.style.display = 'block';
-    if (playlistPanel) playlistPanel.style.display = 'none';
-    
-    currentChapter = null;
-    currentSongIndex = -1;
 }
 
-function togglePlaylistPanel() {
-    const playlistPanel = document.getElementById('playlist-panel');
-    if (!playlistPanel) return;
-    
-    if (playlistPanel.style.display === 'none' || !playlistPanel.style.display) {
-        playlistPanel.style.display = 'block';
-        renderPlaylist();
-    } else {
-        playlistPanel.style.display = 'none';
+// ========== AUDIO PROGRESS ==========
+function updateProgress() {
+    if (audio.duration && !isNaN(audio.duration)) {
+        const percent = (audio.currentTime / audio.duration) * 100;
+        if (npProgress) npProgress.style.width = `${percent}%`;
+        if (npCurrentTime) {
+            const m = Math.floor(audio.currentTime / 60);
+            const s = Math.floor(audio.currentTime % 60);
+            npCurrentTime.textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+        if (npDuration) {
+            const m = Math.floor(audio.duration / 60);
+            const s = Math.floor(audio.duration % 60);
+            npDuration.textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
     }
 }
 
-// ========== THEME & BG MUSIC ==========
+// ========== THEME ==========
 function initTheme() {
-    const savedTheme = localStorage.getItem('elfeki_theme');
-    const dark = savedTheme ? savedTheme === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const saved = localStorage.getItem('elfeki_theme');
+    const dark = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
     document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
     if (themeToggle) themeToggle.textContent = dark ? '☀️' : '🌙';
 }
@@ -498,40 +289,36 @@ function toggleTheme() {
     if (themeToggle) themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌙';
 }
 
-function initBgMusic() {
-    const pref = JSON.parse(localStorage.getItem('elfeki_bg_music_pref') || '{"enabled":true,"volume":0.3}');
-    bgMusicEnabled = pref.enabled;
-    if (bgMusicEnabled) {
-        if (!bgMusic) {
-            bgMusic = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
-            bgMusic.loop = true;
-            bgMusic.volume = pref.volume;
-        }
-        bgMusic.play().catch(e => console.log("BG Music autoplay blocked:", e));
-    } else if (bgMusic) {
-        bgMusic.pause();
-    }
-}
-
-function toggleBgMusic() {
-    bgMusicEnabled = !bgMusicEnabled;
-    localStorage.setItem('elfeki_bg_music_pref', JSON.stringify({ enabled: bgMusicEnabled, volume: 0.3 }));
-    if (bgMusicEnabled && bgMusic) {
-        bgMusic.play().catch(e => console.log("BG Music play failed:", e));
-    } else if (bgMusic) {
-        bgMusic.pause();
-    }
-    showToast(bgMusicEnabled ? 'Background music on' : 'Background music off', 'info');
-}
-
-// ========== AUDIO EVENT LISTENERS ==========
-function setupAudioListeners() {
-    audio.addEventListener('timeupdate', updateNowPlayingProgress);
-    audio.addEventListener('ended', () => {
-        nextTrack();
-    });
+// ========== MAIN INIT ==========
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log('App starting...');
     
-    // Progress bar seeking
+    // Get elements
+    playPauseBtn = document.getElementById('np-play-pause');
+    prevBtn = document.getElementById('np-prev');
+    nextBtn = document.getElementById('np-next');
+    playlistBtn = document.getElementById('np-playlist-btn');
+    themeToggle = document.getElementById('themeToggle');
+    npTitle = document.getElementById('npTitle');
+    npSub = document.getElementById('npSub');
+    npProgress = document.getElementById('np-progress');
+    npCurrentTime = document.getElementById('np-current-time');
+    npDuration = document.getElementById('np-duration');
+    backBtn = document.getElementById('songs-back-btn');
+    
+    // Add listeners
+    if (playPauseBtn) playPauseBtn.addEventListener('click', togglePlayPause);
+    if (prevBtn) prevBtn.addEventListener('click', prevTrack);
+    if (nextBtn) nextBtn.addEventListener('click', nextTrack);
+    if (playlistBtn) playlistBtn.addEventListener('click', showPlaylist);
+    if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
+    if (backBtn) backBtn.addEventListener('click', goBack);
+    
+    // Audio events
+    audio.addEventListener('timeupdate', updateProgress);
+    audio.addEventListener('ended', () => nextTrack());
+    
+    // Progress bar seek
     const progressWrap = document.querySelector('.np-progress-wrap');
     if (progressWrap) {
         progressWrap.addEventListener('click', (e) => {
@@ -543,56 +330,17 @@ function setupAudioListeners() {
             }
         });
     }
-}
-
-// ========== MAIN INITIALIZATION ==========
-document.addEventListener('DOMContentLoaded', async () => {
-    console.log("App initializing with FULL PLAYLIST SYSTEM...");
     
-    // Get DOM elements
-    playPauseBtn = document.getElementById('np-play-pause');
-    prevBtn = document.getElementById('np-prev');
-    nextBtn = document.getElementById('np-next');
-    playlistBtn = document.getElementById('np-playlist-btn');
-    bgMusicBtn = document.getElementById('np-bg-music-btn');
-    themeToggle = document.getElementById('themeToggle');
-    npTitle = document.getElementById('npTitle');
-    npSub = document.getElementById('npSub');
-    npProgress = document.getElementById('np-progress');
-    npCurrentTime = document.getElementById('np-current-time');
-    npDuration = document.getElementById('np-duration');
-    backBtn = document.getElementById('songs-back-btn');
-    
-    // Add event listeners
-    if (playPauseBtn) playPauseBtn.addEventListener('click', togglePlayPause);
-    if (prevBtn) prevBtn.addEventListener('click', prevTrack);
-    if (nextBtn) nextBtn.addEventListener('click', nextTrack);
-    if (playlistBtn) playlistBtn.addEventListener('click', togglePlaylistPanel);
-    if (bgMusicBtn) bgMusicBtn.addEventListener('click', toggleBgMusic);
-    if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
-    if (backBtn) backBtn.addEventListener('click', goBackToCourses);
-    
-    // Create playlist panel if it doesn't exist
-    if (!document.getElementById('playlist-panel')) {
-        const panel = document.createElement('div');
-        panel.id = 'playlist-panel';
-        panel.className = 'playlist-panel';
-        panel.style.display = 'none';
-        panel.innerHTML = '<div class="playlist-header"><h3>📋 My Playlist</h3><button class="close-playlist">✖</button></div><div class="playlist-items"></div>';
-        document.body.appendChild(panel);
-        document.querySelector('.close-playlist')?.addEventListener('click', togglePlaylistPanel);
+    // Load playlist
+    const savedPlaylist = localStorage.getItem('elfeki_playlist');
+    if (savedPlaylist) {
+        try { playlist = JSON.parse(savedPlaylist); } catch(e) {}
     }
     
-    // Setup audio
-    setupAudioListeners();
-    
-    // Load playlist from storage
-    loadPlaylistFromStorage();
-    
-    // Initialize theme
+    // Init theme
     initTheme();
     
-    // --- CRITICAL: Load data from localStorage FIRST ---
+    // Load data - FROM localStorage FIRST (admin saves here)
     let loaded = false;
     try {
         const localRaw = localStorage.getItem('elfeki_chapters');
@@ -601,37 +349,33 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (localData.chapters && localData.chapters.length > 0) {
                 chapters = localData.chapters;
                 loaded = true;
-                console.log("Data loaded from localStorage");
+                console.log('Loaded from localStorage');
             }
         }
-    } catch (e) {
-        console.warn("Error reading localStorage", e);
-    }
+    } catch(e) {}
     
     // Fallback to data.json
     if (!loaded) {
         try {
             const resp = await fetch('data.json?t=' + Date.now());
             if (resp.ok) {
-                const serverData = await resp.json();
-                if (serverData.chapters && serverData.chapters.length > 0) {
-                    chapters = serverData.chapters;
+                const data = await resp.json();
+                if (data.chapters && data.chapters.length > 0) {
+                    chapters = data.chapters;
                     loaded = true;
-                    console.log("Data loaded from data.json");
                     localStorage.setItem('elfeki_chapters', JSON.stringify({ chapters: chapters }));
+                    console.log('Loaded from data.json');
                 }
             }
-        } catch (e) {
-            console.warn("Could not load data.json", e);
-        }
+        } catch(e) {}
     }
     
-    // Final fallback: default data
+    // Final fallback
     if (!loaded || chapters.length === 0) {
         chapters = [{
             id: 1,
-            name: "Introduction to Human Development",
-            icon: "🌟",
+            name: "Sample Course",
+            icon: "📚",
             songs: [{
                 id: 1,
                 title: "Welcome Episode",
@@ -639,22 +383,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 image: ""
             }]
         }];
-        console.log("Using default demo data");
+        console.log('Using demo data');
     }
     
-    // Render UI
+    // Render
     renderChapters();
     
-    // Update counts
+    // Update stats
     const totalCourses = chapters.length;
-    const totalEpisodes = chapters.reduce((sum, ch) => sum + (ch.songs ? ch.songs.length : 0), 0);
-    const chCountSpan = document.getElementById('chCount');
-    const epCountSpan = document.getElementById('epCount');
-    if (chCountSpan) chCountSpan.textContent = totalCourses;
-    if (epCountSpan) epCountSpan.textContent = totalEpisodes;
+    const totalEpisodes = chapters.reduce((s, c) => s + (c.songs?.length || 0), 0);
+    const chCount = document.getElementById('chCount');
+    const epCount = document.getElementById('epCount');
+    if (chCount) chCount.textContent = totalCourses;
+    if (epCount) epCount.textContent = totalEpisodes;
     
-    // Initialize background music
-    initBgMusic();
-    
-    console.log("App initialized successfully");
+    console.log('App ready!');
 });
