@@ -352,13 +352,13 @@ async function uploadToCloudinary(file, onProgress){
 (async function(){
   initTheme(); // always dark by default
   try{
-    // Use the DB class from config.js (connects to Supabase via Vercel API)
+    // Use the DB class from config.js (connects DIRECTLY to Supabase)
     if(typeof DB !== 'undefined'){
       await DB.init();
       const data = DB.getData();
       CHAPTERS = data.chapters || [];
     } else {
-      // Fallback: direct data.json fetch (GitHub Pages static)
+      // Fallback: direct data.json fetch (if config.js failed to load)
       const resp = await fetch('data.json?t=' + Date.now());
       const data = await resp.json();
       CHAPTERS = data.chapters || [];
