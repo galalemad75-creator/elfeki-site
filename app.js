@@ -138,7 +138,12 @@ function showSongsView(chapter) {
     songs.forEach(function(song, i) {
       var card = document.createElement('div');
       card.className = 'song-card';
-      card.innerHTML = '<button class="song-play-btn" data-index="' + i + '" aria-label="Play ' + (song.title || '') + '">▶</button>'
+      var imgSrc = song.image || song.cover || song.thumbnail || '';
+      var thumbHtml = imgSrc
+        ? '<img class="song-thumb" src="' + imgSrc + '" alt="" style="width:44px;height:44px;border-radius:8px;object-fit:cover;">'
+        : '<div class="song-thumb" style="width:44px;height:44px;border-radius:8px;background:var(--accent,#6c5ce7);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🎙️</div>';
+      card.innerHTML = thumbHtml
+        + '<button class="song-play-btn" data-index="' + i + '" aria-label="Play ' + (song.title || '') + '">▶</button>'
         + '<span class="song-title">' + (song.title || 'Untitled') + '</span>'
         + '<button class="song-add-btn" data-index="' + i + '" aria-label="Add to playlist" title="Add to playlist">📋</button>';
 
@@ -225,6 +230,11 @@ function loadAndPlay(song, chapterName, chapterId) {
     audio.addEventListener('loadedmetadata', onMetadataLoaded);
   }
 
+  // Pause background music when a song starts
+  if (bgMusic && !bgMusic.paused) {
+    bgMusic.pause();
+  }
+
   audio.src = song.audio || song.url || '';
   audio.play().catch(() => { /* user gesture required */ });
   isPlaying = true;
@@ -234,6 +244,10 @@ function loadAndPlay(song, chapterName, chapterId) {
 }
 
 function onSongEnd() {
+  // If no more tracks, resume background music
+  if (playlist.length === 0 || playlistIndex >= playlist.length - 1) {
+    if (bgMusic && bgMusicEnabled) bgMusic.play().catch(() => {});
+  }
   nextTrack();
 }
 
@@ -280,18 +294,23 @@ function togglePlayPause() {
 
 // ─── Now Playing Bar ─────────────────────────────────────────────────────────
 function updateNowPlaying(song, chapterName) {
-  const bar = document.getElementById('now-playing');
+  var bar = document.getElementById('now-playing');
   if (!bar) return;
   bar.style.display = '';
+  bar.classList.add('show');
 
-  const titleEl = document.getElementById('npTitle');
+  var titleEl = document.getElementById('npTitle');
   if (titleEl) titleEl.textContent = song.title || '';
 
-  const chapterEl = document.getElementById('npSub');
+  var chapterEl = document.getElementById('npSub');
   if (chapterEl) chapterEl.textContent = chapterName || '';
 
-  const imgEl = document.getElementById('npImg');
-  if (imgEl && (song.image || song.cover)) { imgEl.src = song.image || song.cover; imgEl.style.display = ''; }
+  var imgEl = document.getElementById('npImg');
+  if (imgEl) {
+    var imgSrc = song.image || song.cover || song.thumbnail || '';
+    if (imgSrc) { imgEl.src = imgSrc; imgEl.style.display = ''; }
+    else { imgEl.style.display = 'none'; }
+  }
 
   // Play/pause button
   const ppBtn = document.getElementById('np-play-pause');
