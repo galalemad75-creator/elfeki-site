@@ -1,927 +1,307 @@
-/**
- * El-Feki App.js — Complete Application Logic
- * Features: Playlist system, cross-chapter playback, background music,
- * PersistDB integration, theme toggle, scroll animations, cookie/ads, nav
- */
+/* ═══════════════════════════════════════════════════════
+   Dr. El-Feki Podcast — Spotify-Style App
+   ═══════════════════════════════════════════════════════ */
 
-// ─── State ───────────────────────────────────────────────────────────────────
-let chapters = [];
-let currentChapter = null;
+let CHAPTERS = [];
+let liked = JSON.parse(localStorage.getItem('ef_liked') || '[]');
+let playlists = JSON.parse(localStorage.getItem('ef_playlists') || '[]');
+let recentlyPlayed = JSON.parse(localStorage.getItem('ef_recent') || '[]');
+let currentChapterId = null;
 let currentSongIndex = -1;
-let audio = null;            // main song audio
 let isPlaying = false;
+let isShuffle = false;
+let repeatMode = 0;
+let currentPlaylistId = null;
 
-// Playlist
-let playlist = [];           // [{id, title, audio, image, chapterName, chapterId}]
-let playlistIndex = -1;
+const COURSE_COLORS = ['#1DB954','#e91e63','#ff9800','#9c27b0','#ffc107','#03a9f4','#4caf50','#f44336'];
 
-// Background music
-let bgMusic = null;
-let bgMusicEnabled = true;
+function parseDuration(s){if(!s)return 0;const p=s.split(':').map(Number);return p.length===3?p[0]*3600+p[1]*60+p[2]:(p[0]||0)*60+(p[1]||0);}
+function formatTime(sec){if(!sec||isNaN(sec))return'0:00';const m=Math.floor(sec/60),s=Math.floor(sec%60);return m+':'+String(s).padStart(2,'0');}
+function toast(msg){const c=document.getElementById('toast-container');const t=document.createElement('div');t.className='toast';t.textContent=msg;c.appendChild(t);setTimeout(()=>{t.classList.add('removing');setTimeout(()=>t.remove(),300);},2500);}
+function getGreeting(){const h=new Date().getHours();if(h<12)return'Good morning';if(h<18)return'Good afternoon';return'Good evening';}
 
-// ─── Toast ───────────────────────────────────────────────────────────────────
-function showToast(msg, duration = 2000) {
-  let toast = document.getElementById('elfeki-toast');
-  if (!toast) {
-    toast = document.createElement('div');
-    toast.id = 'elfeki-toast';
-    Object.assign(toast.style, {
-      position: 'fixed', bottom: '100px', left: '50%', transform: 'translateX(-50%)',
-      background: 'var(--accent, #6c5ce7)', color: '#fff', padding: '10px 24px',
-      borderRadius: '8px', fontSize: '14px', zIndex: '10000', opacity: '0',
-      transition: 'opacity 0.3s', pointerEvents: 'none', whiteSpace: 'nowrap'
-    });
-    document.body.appendChild(toast);
-  }
-  toast.textContent = msg;
-  toast.style.opacity = '1';
-  clearTimeout(toast._timer);
-  toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, duration);
+// ── Views ──
+function showView(viewId){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const view=document.getElementById('view-'+viewId);
+  if(view)view.classList.add('active');
+  const nav=document.querySelector(`[data-view="${viewId}"]`);
+  if(nav)nav.classList.add('active');
+  document.getElementById('search-box').style.display=viewId==='search'?'flex':'none';
+  if(viewId==='library')renderLibrary();
+  if(viewId==='search')renderBrowse();
+  if(viewId==='liked')renderLiked();
 }
 
-// ─── Theme ───────────────────────────────────────────────────────────────────
-function initTheme() {
-  const saved = localStorage.getItem('elfeki_theme') || 'light';
-  document.documentElement.setAttribute('data-theme', saved);
-  updateThemeIcon(saved);
-}
-
-function toggleTheme() {
-  const current = document.documentElement.getAttribute('data-theme');
-  const next = current === 'dark' ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', next);
-  localStorage.setItem('elfeki_theme', next);
-  updateThemeIcon(next);
-}
-
-function updateThemeIcon(theme) {
-  const btn = document.getElementById('themeToggle');
-  if (btn) {
-    btn.textContent = theme === 'dark' ? '☀️' : '🌙';
-    btn.setAttribute('aria-label', `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`);
-  }
-}
-
-// ─── Navigation ──────────────────────────────────────────────────────────────
-function initNav() {
-  const hamburger = document.getElementById('hamburger');
-  const navLinks = document.getElementById('navMenu');
-  if (hamburger && navLinks) {
-    hamburger.addEventListener('click', () => {
-      navLinks.classList.toggle('open');
-      hamburger.classList.toggle('active');
-    });
-    // Close menu on link click
-    navLinks.querySelectorAll('a').forEach(a => {
-      a.addEventListener('click', () => {
-        navLinks.classList.remove('open');
-        hamburger.classList.remove('active');
-      });
-    });
-  }
-
-  // Theme toggle button
-  const themeBtn = document.getElementById('themeToggle');
-  if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
-
-  // Scroll → shrink nav
-  window.addEventListener('scroll', () => {
-    const nav = document.querySelector('.navbar');
-    if (nav) nav.classList.toggle('scrolled', window.scrollY > 50);
-  }, { passive: true });
-}
-
-function showHome() {
-  const hero = document.querySelector('.hero');
-  const features = document.querySelector('.features');
-  const chaptersSection = document.getElementById('chapters') || document.querySelector('.chapters-section');
-  const cta = document.querySelector('.cta-section');
-  const songsView = document.getElementById('songs-view');
-
-  [hero, features, chaptersSection, cta].forEach(el => { if (el) el.style.display = ''; });
-  if (songsView) songsView.style.display = 'none';
-
-  // Hide any playlist panel
-  hidePlaylistPanel();
-
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function showSongsView(chapter) {
-  try {
-    // Hide optional sections safely
-    var hero = document.querySelector('.hero');
-    var features = document.querySelector('.features');
-    var chaptersSection = document.getElementById('chapters');
-    var cta = document.querySelector('.cta-section');
-    if (hero) hero.style.display = 'none';
-    if (features) features.style.display = 'none';
-    if (chaptersSection) chaptersSection.style.display = 'none';
-    if (cta) cta.style.display = 'none';
-
-    var songsView = document.getElementById('songs-view');
-    if (!songsView) { console.error('songs-view not found'); return; }
-    songsView.style.display = 'block';
-
-    // Header
-    var headerEl = document.getElementById('songs-chapter-title');
-    if (headerEl) headerEl.textContent = (chapter && (chapter.title || chapter.name)) || 'Chapter';
-
-    currentChapter = chapter;
-
-    // Render song cards
-    var grid = document.getElementById('songs-grid');
-    if (!grid) { console.error('songs-grid not found'); return; }
-    grid.innerHTML = '';
-
-    var songs = (chapter && chapter.songs) || [];
-    songs.forEach(function(song, i) {
-      var card = document.createElement('div');
-      card.className = 'song-card';
-      var imgSrc = song.image || song.cover || song.thumbnail || '';
-      var thumbHtml = imgSrc
-        ? '<img class="song-thumb" src="' + imgSrc + '" alt="" style="width:44px;height:44px;border-radius:8px;object-fit:cover;">'
-        : '<div class="song-thumb" style="width:44px;height:44px;border-radius:8px;background:var(--accent,#6c5ce7);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🎙️</div>';
-      card.innerHTML = thumbHtml
-        + '<button class="song-play-btn" data-index="' + i + '" aria-label="Play ' + (song.title || '') + '">▶</button>'
-        + '<span class="song-title">' + (song.title || 'Untitled') + '</span>'
-        + '<button class="song-add-btn" data-index="' + i + '" aria-label="Add to playlist" title="Add to playlist">📋</button>';
-
-      card.querySelector('.song-play-btn').addEventListener('click', function(e) {
-        e.stopPropagation();
-        playSong(i);
-      });
-
-      card.querySelector('.song-add-btn').addEventListener('click', function(e) {
-        e.stopPropagation();
-        addToPlaylistBtn(chapter.id, i);
-      });
-
-      card.addEventListener('click', function() { playSong(i); });
-
-      grid.appendChild(card);
-    });
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  } catch(err) {
-    console.error('showSongsView error:', err);
-  }
-}
-
-// ─── Chapters Grid ───────────────────────────────────────────────────────────
-function initChapters() {
-  renderChapters();
-  // Wire back button
-  const backBtn = document.getElementById('songs-back-btn');
-  if (backBtn) backBtn.addEventListener('click', showHome);
-  // Wire play all / shuffle
-  const playAllBtn = document.getElementById('btn-play-all');
-  if (playAllBtn) playAllBtn.addEventListener('click', () => { if (currentChapter) buildPlaylistFromChapter(currentChapter, false); });
-  const shuffleBtn = document.getElementById('btn-shuffle-all');
-  if (shuffleBtn) shuffleBtn.addEventListener('click', () => { if (currentChapter) buildPlaylistFromChapter(currentChapter, true); });
-}
-
-function renderChapters() {
-  var grid = document.getElementById('chapters-grid');
-  if (!grid) return;
-  grid.innerHTML = '';
-
-  chapters.forEach(function(ch) {
-    var card = document.createElement('div');
-    card.className = 'chapter-card';
-    var icon = ch.icon || '📖';
-    var name = ch.name || ch.title || 'Chapter';
-    var songCount = (ch.songs || []).length;
-    card.innerHTML = '<span class="chapter-icon">' + icon + '</span>'
-      + '<h3>' + name + '</h3>'
-      + '<span class="chapter-songs-count">' + songCount + ' episode' + (songCount !== 1 ? 's' : '') + '</span>';
-
-    card.addEventListener('click', function() {
-      try { showSongsView(ch); } catch(err) { console.error('Chapter click error:', err); }
-    });
-
-    grid.appendChild(card);
-  });
-}
-
-// ─── Play Song ───────────────────────────────────────────────────────────────
-function playSong(i) {
-  if (!currentChapter) return;
-  const songs = currentChapter.songs || [];
-  if (i < 0 || i >= songs.length) return;
-
-  currentSongIndex = i;
-  const song = songs[i];
-
-  // Also set playlist context (but don't overwrite existing playlist unless empty)
-  if (playlist.length === 0) {
-    buildPlaylistFromChapter(currentChapter, false);
-    playlistIndex = i;
-  }
-
-  loadAndPlay(song, currentChapter.title || currentChapter.name, currentChapter.id);
-}
-
-function loadAndPlay(song, chapterName, chapterId) {
-  if (!audio) {
-    audio = new Audio();
-    audio.addEventListener('ended', onSongEnd);
-    audio.addEventListener('timeupdate', updateProgressBar);
-    audio.addEventListener('loadedmetadata', onMetadataLoaded);
-  }
-
-  // Pause background music when a song starts
-  if (bgMusic && !bgMusic.paused) {
-    bgMusic.pause();
-  }
-
-  audio.src = song.audio || song.url || '';
-  audio.play().catch(() => { /* user gesture required */ });
-  isPlaying = true;
-
-  updateNowPlaying(song, chapterName);
-  updatePlayPauseBtn();
-}
-
-function onSongEnd() {
-  // If no more tracks, resume background music
-  if (playlist.length === 0 || playlistIndex >= playlist.length - 1) {
-    if (bgMusic && bgMusicEnabled) bgMusic.play().catch(() => {});
-  }
-  nextTrack();
-}
-
-function onMetadataLoaded() {
-  const durationEl = document.getElementById('np-duration');
-  if (durationEl && audio.duration) {
-    durationEl.textContent = formatTime(audio.duration);
-  }
-}
-
-function updateProgressBar() {
-  if (!audio || !audio.duration) return;
-  const pct = (audio.currentTime / audio.duration) * 100;
-  const bar = document.getElementById('np-progress');
-  if (bar) bar.style.width = pct + '%';
-
-  const curEl = document.getElementById('np-current-time');
-  if (curEl) curEl.textContent = formatTime(audio.currentTime);
-}
-
-function formatTime(s) {
-  if (!s || !isFinite(s)) return '0:00';
-  const m = Math.floor(s / 60);
-  const sec = Math.floor(s % 60);
-  return m + ':' + (sec < 10 ? '0' : '') + sec;
-}
-
-function updatePlayPauseBtn() {
-  const btn = document.getElementById('np-play-pause');
-  if (btn) btn.textContent = isPlaying ? '⏸' : '▶';
-}
-
-function togglePlayPause() {
-  if (!audio || !audio.src) return;
-  if (isPlaying) {
-    audio.pause();
-    isPlaying = false;
-  } else {
-    audio.play().catch(() => {});
-    isPlaying = true;
-  }
-  updatePlayPauseBtn();
-}
-
-// ─── Now Playing Bar ─────────────────────────────────────────────────────────
-function updateNowPlaying(song, chapterName) {
-  var bar = document.getElementById('now-playing');
-  if (!bar) return;
-  bar.style.display = '';
-  bar.classList.add('show');
-
-  var titleEl = document.getElementById('npTitle');
-  if (titleEl) titleEl.textContent = song.title || '';
-
-  var chapterEl = document.getElementById('npSub');
-  if (chapterEl) chapterEl.textContent = chapterName || '';
-
-  var imgEl = document.getElementById('npImg');
-  if (imgEl) {
-    var imgSrc = song.image || song.cover || song.thumbnail || '';
-    if (imgSrc) { imgEl.src = imgSrc; imgEl.style.display = ''; }
-    else { imgEl.style.display = 'none'; }
-  }
-
-  // Play/pause button
-  const ppBtn = document.getElementById('np-play-pause');
-  if (ppBtn && !ppBtn._bound) {
-    ppBtn._bound = true;
-    ppBtn.addEventListener('click', togglePlayPause);
-  }
-
-  // Next / Prev buttons
-  const nextBtn = document.getElementById('np-next');
-  if (nextBtn && !nextBtn._bound) {
-    nextBtn._bound = true;
-    nextBtn.addEventListener('click', nextTrack);
-  }
-  const prevBtn = document.getElementById('np-prev');
-  if (prevBtn && !prevBtn._bound) {
-    prevBtn._bound = true;
-    prevBtn.addEventListener('click', prevTrack);
-  }
-
-  // Progress bar seek
-  const progContainer = document.getElementById('np-progress-bar');
-  if (progContainer && !progContainer._bound) {
-    progContainer._bound = true;
-    progContainer.addEventListener('click', (e) => {
-      if (!audio || !audio.duration) return;
-      const rect = progContainer.getBoundingClientRect();
-      const pct = (e.clientX - rect.left) / rect.width;
-      audio.currentTime = pct * audio.duration;
-    });
-  }
-
-  // Playlist button in now-playing bar
-  const plBtn = document.getElementById('np-playlist-btn');
-  if (plBtn && !plBtn._bound) {
-    plBtn._bound = true;
-    plBtn.addEventListener('click', () => {
-      const panel = document.getElementById('playlist-panel');
-      if (panel && panel.style.display !== 'none') {
-        hidePlaylistPanel();
-      } else {
-        showPlaylistPanel();
-      }
-    });
-  }
-
-  // Background music toggle button
-  const bgBtn = document.getElementById('np-bg-music-btn');
-  if (bgBtn && !bgBtn._bound) {
-    bgBtn._bound = true;
-    bgBtn.addEventListener('click', toggleBgMusic);
-  }
-}
-
-// ─── Playback Controls (Cross-Chapter) ───────────────────────────────────────
-function nextTrack() {
-  if (playlist.length > 0) {
-    playlistIndex = (playlistIndex + 1) % playlist.length;
-    playSongFromPlaylist(playlistIndex);
-  } else if (currentChapter) {
-    const songs = currentChapter.songs || [];
-    if (currentSongIndex + 1 < songs.length) {
-      playSong(currentSongIndex + 1);
-    } else {
-      const chIdx = chapters.findIndex(c => c.id === currentChapter.id);
-      for (let i = chIdx + 1; i < chapters.length; i++) {
-        if (chapters[i].songs.length > 0) {
-          currentChapter = chapters[i];
-          showSongsView(currentChapter);
-          setTimeout(() => playSong(0), 100);
-          return;
-        }
-      }
-    }
-  }
-}
-
-function prevTrack() {
-  if (playlist.length > 0) {
-    playlistIndex = (playlistIndex - 1 + playlist.length) % playlist.length;
-    playSongFromPlaylist(playlistIndex);
-  } else if (currentChapter) {
-    const songs = currentChapter.songs || [];
-    if (currentSongIndex > 0) {
-      playSong(currentSongIndex - 1);
-    } else {
-      const chIdx = chapters.findIndex(c => c.id === currentChapter.id);
-      for (let i = chIdx - 1; i >= 0; i--) {
-        if (chapters[i].songs.length > 0) {
-          currentChapter = chapters[i];
-          showSongsView(currentChapter);
-          const lastIdx = chapters[i].songs.length - 1;
-          setTimeout(() => playSong(lastIdx), 100);
-          return;
-        }
-      }
-    }
-  }
-}
-
-// ─── Playlist System ─────────────────────────────────────────────────────────
-function addToPlaylist(song, chapterName, chapterId) {
-  const audioUrl = song.audio || song.url || '';
-  const exists = playlist.some(p => (p.audio || p.url) === audioUrl);
-  if (exists) {
-    showToast('Already in playlist');
-    return;
-  }
-
-  playlist.push({
-    id: song.id || audioUrl,
-    title: song.title,
-    audio: audioUrl,
-    image: song.image || song.cover || '',
-    chapterName: chapterName,
-    chapterId: chapterId
-  });
-
-  savePlaylist();
-  showToast('Added to playlist ✓');
-
-  // Refresh panel if open
-  const panel = document.getElementById('playlist-panel');
-  if (panel && panel.style.display !== 'none') renderPlaylistPanel();
-}
-
-function removeFromPlaylist(index) {
-  if (index < 0 || index >= playlist.length) return;
-  playlist.splice(index, 1);
-
-  // Adjust playlistIndex
-  if (playlistIndex === index) {
-    // Removed currently playing — stop
-    if (audio) { audio.pause(); audio.src = ''; }
-    isPlaying = false;
-    playlistIndex = -1;
-  } else if (playlistIndex > index) {
-    playlistIndex--;
-  }
-
-  savePlaylist();
-  renderPlaylistPanel();
-  showToast('Removed from playlist');
-}
-
-function clearPlaylist() {
-  playlist = [];
-  playlistIndex = -1;
-  savePlaylist();
-  renderPlaylistPanel();
-  showToast('Playlist cleared');
-}
-
-// ★ زر إضافة أغنية لقائمة التشغيل ★
-function addToPlaylistBtn(chapterId, songIdx) {
-  const ch = chapters.find(c => c.id === chapterId);
-  if (!ch) return;
-  const song = ch.songs[songIdx];
-  if (!song) return;
-  if (playlist.some(s => s.audio === song.audio)) {
-    showToast('Already in playlist');
-    return;
-  }
-  playlist.push({ title: song.title, audio: song.audio, image: song.image || '' });
-  savePlaylist();
-  showToast('Added to playlist ✓');
-  const panel = document.getElementById('playlist-panel');
-  if (panel && panel.style.display !== 'none') renderPlaylistPanel();
-}
-
-// ★ إعادة ترتيب أغنية في القائمة ★
-function moveInPlaylist(from, to) {
-  if (from < 0 || from >= playlist.length || to < 0 || to >= playlist.length) return;
-  const item = playlist.splice(from, 1)[0];
-  playlist.splice(to, 0, item);
-  if (playlistIndex === from) playlistIndex = to;
-  else if (from < playlistIndex && to >= playlistIndex) playlistIndex--;
-  else if (from > playlistIndex && to <= playlistIndex) playlistIndex++;
-  savePlaylist();
-  renderPlaylistPanel();
-}
-
-function savePlaylist() {
-  try {
-    PersistDB.savePlaylist(playlist);
-  } catch (e) {
-    // Fallback: save directly to localStorage
-    localStorage.setItem('elfeki_playlist', JSON.stringify(playlist));
-  }
-}
-
-function buildPlaylistFromChapter(chapter, shuffle) {
-  const songs = chapter.songs || [];
-  if (songs.length === 0) return;
-
-  playlist = songs.map(s => ({
-    id: s.id || s.audio || s.url,
-    title: s.title,
-    audio: s.audio || s.url || '',
-    image: s.image || s.cover || '',
-    chapterName: chapter.title || chapter.name || '',
-    chapterId: chapter.id
-  }));
-
-  if (shuffle) shuffleArray(playlist);
-
-  playlistIndex = 0;
-  savePlaylist();
-  playSongFromPlaylist(0);
-}
-
-function buildPlaylistFromAll(shuffle) {
-  const allSongs = [];
-  chapters.forEach(ch => {
-    (ch.songs || []).forEach(s => {
-      allSongs.push({
-        id: s.id || s.audio || s.url,
-        title: s.title,
-        audio: s.audio || s.url || '',
-        image: s.image || s.cover || '',
-        chapterName: ch.title || ch.name || '',
-        chapterId: ch.id
-      });
-    });
-  });
-
-  if (allSongs.length === 0) return;
-
-  playlist = allSongs;
-  if (shuffle) shuffleArray(playlist);
-
-  playlistIndex = 0;
-  savePlaylist();
-  playSongFromPlaylist(0);
-}
-
-function playSongFromPlaylist(index) {
-  if (index < 0 || index >= playlist.length) return;
-  playlistIndex = index;
-  const item = playlist[index];
-
-  loadAndPlay(item, item.chapterName, item.chapterId);
-
-  // Update active state in panel
-  const panel = document.getElementById('playlist-panel');
-  if (panel && panel.style.display !== 'none') {
-    panel.querySelectorAll('.pl-item').forEach((el, i) => {
-      el.classList.toggle('active', i === index);
-    });
-  }
-}
-
-function shuffleArray(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-
-// ─── Playlist Panel UI ───────────────────────────────────────────────────────
-function showPlaylistPanel() {
-  let panel = document.getElementById('playlist-panel');
-  if (!panel) {
-    panel = document.createElement('div');
-    panel.id = 'playlist-panel';
-    Object.assign(panel.style, {
-      position: 'fixed', top: '0', right: '0', width: '340px', maxWidth: '90vw',
-      height: '100vh', background: 'var(--bg, #fff)', color: 'var(--text, #333)',
-      boxShadow: '-4px 0 20px rgba(0,0,0,0.15)', zIndex: '9999',
-      overflowY: 'auto', transition: 'transform 0.3s', display: 'flex',
-      flexDirection: 'column'
-    });
-    document.body.appendChild(panel);
-  }
-
-  // Header
-  panel.innerHTML = `
-    <div class="pl-header" style="display:flex;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid var(--border,#eee);position:sticky;top:0;background:inherit;z-index:1;">
-      <h3 style="margin:0;font-size:18px;">Playlist (${playlist.length})</h3>
-      <div style="display:flex;gap:8px;">
-        <button id="pl-clear" title="Clear playlist" style="border:none;background:none;cursor:pointer;font-size:16px;">🗑️</button>
-        <button id="pl-close" title="Close" style="border:none;background:none;cursor:pointer;font-size:20px;">✕</button>
-      </div>
-    </div>
-    <div id="pl-list" style="flex:1;"></div>
-  `;
-
-  document.getElementById('pl-close').addEventListener('click', hidePlaylistPanel);
-  document.getElementById('pl-clear').addEventListener('click', clearPlaylist);
-
-  renderPlaylistPanel();
-
-  // Animate in
-  requestAnimationFrame(() => {
-    panel.style.transform = 'translateX(0)';
-  });
-  panel.style.display = 'flex';
-
-  // Backdrop
-  let backdrop = document.getElementById('pl-backdrop');
-  if (!backdrop) {
-    backdrop = document.createElement('div');
-    backdrop.id = 'pl-backdrop';
-    Object.assign(backdrop.style, {
-      position: 'fixed', top: '0', left: '0', width: '100%', height: '100%',
-      background: 'rgba(0,0,0,0.4)', zIndex: '9998', display: 'none'
-    });
-    backdrop.addEventListener('click', hidePlaylistPanel);
-    document.body.appendChild(backdrop);
-  }
-  backdrop.style.display = 'block';
-}
-
-function hidePlaylistPanel() {
-  const panel = document.getElementById('playlist-panel');
-  if (panel) panel.style.display = 'none';
-  const backdrop = document.getElementById('pl-backdrop');
-  if (backdrop) backdrop.style.display = 'none';
-}
-
-function renderPlaylistPanel() {
-  const list = document.getElementById('pl-list');
-  if (!list) return;
-
-  if (playlist.length === 0) {
-    list.innerHTML = '<p style="text-align:center;color:var(--text-secondary,#999);padding:40px 20px;">Playlist is empty.<br>Add songs from any chapter!</p>';
-    return;
-  }
-
-  list.innerHTML = '';
-  playlist.forEach((item, i) => {
-    const el = document.createElement('div');
-    el.className = 'pl-item' + (i === playlistIndex ? ' active' : '');
-    Object.assign(el.style, {
-      display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px',
-      cursor: 'pointer', borderBottom: '1px solid var(--border,#eee)',
-      background: i === playlistIndex ? 'var(--accent-light, #6c5ce720)' : 'transparent',
-      transition: 'background 0.15s'
-    });
-
-    el.innerHTML = `
-      <span class="pl-item-num" style="font-size:12px;color:var(--text-secondary,#999);min-width:24px;">${i + 1}</span>
-      <div class="pl-item-info" style="flex:1;min-width:0;">
-        <div class="pl-item-title" style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.title}</div>
-        <div class="pl-item-chapter" style="font-size:12px;color:var(--text-secondary,#999);">${item.chapterName}</div>
-      </div>
-      <button class="pl-item-remove" title="Remove" style="border:none;background:none;cursor:pointer;font-size:14px;opacity:0.5;transition:opacity 0.15s;">✕</button>
-    `;
-
-    // Click to play
-    el.querySelector('.pl-item-info').addEventListener('click', () => playSongFromPlaylist(i));
-
-    // Remove button
-    el.querySelector('.pl-item-remove').addEventListener('click', (e) => {
-      e.stopPropagation();
-      removeFromPlaylist(i);
-    });
-
-    // Hover effect
-    el.addEventListener('mouseenter', () => { el.style.background = i === playlistIndex ? 'var(--accent-light, #6c5ce720)' : 'var(--hover-bg, #f5f5f5)'; });
-    el.addEventListener('mouseleave', () => { el.style.background = i === playlistIndex ? 'var(--accent-light, #6c5ce720)' : 'transparent'; });
-
-    list.appendChild(el);
-  });
-}
-
-// ─── Background Music ────────────────────────────────────────────────────────
-function initBgMusic() {
-  const saved = localStorage.getItem('elfeki_bg_music_enabled');
-  bgMusicEnabled = saved !== 'false'; // default true
-
-  bgMusic = new Audio('default-music.mp3');
-  bgMusic.loop = true;
-  bgMusic.volume = 0.15;
-
-  // Auto-play background music immediately
-  if (bgMusicEnabled) {
-    bgMusic.play().catch(() => {
-      // Fallback: play on first user interaction if autoplay blocked
-      const tryPlayBg = () => {
-        if (bgMusicEnabled && bgMusic.paused) {
-          bgMusic.play().catch(() => {});
-        }
-        document.removeEventListener('click', tryPlayBg);
-        document.removeEventListener('touchstart', tryPlayBg);
+// ── Render Home ──
+function renderHome(){
+  document.getElementById('greeting-text').textContent=getGreeting();
+  const qc=document.getElementById('quick-cards');
+  qc.innerHTML=CHAPTERS.slice(0,6).map((c,i)=>`
+    <div class="quick-card" onclick="showCourse(${c.id})">
+      <div class="quick-card-img">${c.icon||'📚'}</div>
+      <span class="quick-card-name">${c.name}</span>
+      <button class="quick-card-play" onclick="event.stopPropagation();playCourse(${c.id},0)">▶</button>
+    </div>`).join('');
+
+  renderCardGrid('courses-grid',CHAPTERS.filter(c=>c.songs&&c.songs.length>0).map((c,i)=>({
+    id:c.id,icon:c.icon||'📚',title:c.name,subtitle:`${c.songs.length} episodes`,
+    color:COURSE_COLORS[i%COURSE_COLORS.length],
+    onclick:`showCourse(${c.id})`,playBtn:`event.stopPropagation();playCourse(${c.id},0)`
+  })));
+
+  // Popular
+  const allEp=[];
+  CHAPTERS.forEach((c,ci)=>c.songs&&c.songs.forEach((s,si)=>allEp.push({...s,chapter:c,chapterId:c.id,songIndex:si,color:COURSE_COLORS[ci%COURSE_COLORS.length]})));
+  renderCardGrid('popular-grid',allEp.slice(0,6).map(e=>({
+    id:e.id,icon:e.chapter.icon||'📚',title:e.title,subtitle:e.chapter.name,
+    color:e.color,onclick:`playCourse(${e.chapterId},${e.songIndex})`,playBtn:`event.stopPropagation();playCourse(${e.chapterId},${e.songIndex})`
+  })));
+
+  // Recent
+  const rg=document.getElementById('recent-grid');
+  if(recentlyPlayed.length>0){
+    renderCardGrid('recent-grid',recentlyPlayed.slice(0,6).map(r=>{
+      const ch=CHAPTERS.find(c=>c.id==r.chapterId);if(!ch||!ch.songs[r.songIndex])return null;
+      const ci=CHAPTERS.indexOf(ch);
+      return{id:ch.songs[r.songIndex].id,icon:ch.icon||'📚',title:ch.songs[r.songIndex].title,subtitle:ch.name,color:COURSE_COLORS[ci%COURSE_COLORS.length],
+        onclick:`playCourse(${ch.id},${r.songIndex})`,playBtn:`event.stopPropagation();playCourse(${ch.id},${r.songIndex})`
       };
-      document.addEventListener('click', tryPlayBg, { once: true });
-      document.addEventListener('touchstart', tryPlayBg, { once: true });
-    });
+    }).filter(Boolean));
+  }else{rg.innerHTML='<p style="color:var(--text-subdued);font-size:0.9rem;">Start listening to see your recent plays here.</p>';}
+}
+
+function renderCardGrid(containerId,items){
+  const container=document.getElementById(containerId);if(!container)return;
+  container.innerHTML=items.map(item=>`
+    <div class="card" onclick="${item.onclick}">
+      <div class="card-img" style="background:linear-gradient(135deg,${item.color}22,${item.color}44);">${item.icon}
+        <button class="card-play" onclick="${item.playBtn}">▶</button>
+      </div>
+      <div class="card-title">${item.title}</div>
+      <div class="card-subtitle">${item.subtitle}</div>
+    </div>`).join('');
+}
+
+// ── Course Detail ──
+function showCourse(chapterId){
+  const ch=CHAPTERS.find(c=>c.id==chapterId);if(!ch)return;
+  currentChapterId=chapterId;
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-course').classList.add('active');
+  const ci=CHAPTERS.indexOf(ch);
+  document.getElementById('course-hero').innerHTML=`
+    <div class="course-hero-img" style="background:linear-gradient(135deg,${COURSE_COLORS[ci%COURSE_COLORS.length]}33,${COURSE_COLORS[ci%COURSE_COLORS.length]}66);">${ch.icon||'📚'}</div>
+    <div class="course-hero-info"><div class="course-hero-type">Course</div>
+    <h1 class="course-hero-title">${ch.name}</h1>
+    <div class="course-hero-meta"><strong>Dr. Ibrahim El-Feki</strong> · ${(ch.songs||[]).length} episodes</div></div>`;
+  renderTrackList('course-track-list',ch.songs||[],chapterId);
+}
+
+function renderTrackList(containerId,songs,chapterId){
+  const container=document.getElementById(containerId);if(!container)return;
+  container.innerHTML=`
+    <div class="track-row" style="opacity:0.5;pointer-events:none;">
+      <div class="track-num" style="font-size:0.75rem;font-weight:700;color:var(--text-subdued);">#</div>
+      <div style="font-size:0.75rem;font-weight:700;color:var(--text-subdued);text-transform:uppercase;">Title</div>
+      <div class="track-duration" style="font-size:0.75rem;font-weight:700;color:var(--text-subdued);">Date</div>
+      <div></div>
+    </div>
+    ${songs.map((s,i)=>{
+      const isLiked=liked.includes(String(s.id));
+      const isCurrent=currentChapterId==chapterId&&currentSongIndex===i;
+      return`<div class="track-row ${isCurrent?'playing':''}" data-ep-id="${s.id}" onclick="playCourse(${chapterId},${i})">
+        <div class="track-num"><span class="num-text">${isCurrent&&isPlaying?'🔊':i+1}</span><span class="play-icon">▶</span></div>
+        <div class="track-info"><div class="track-title">${s.title}</div><div class="track-subtitle">Dr. El-Feki</div></div>
+        <div class="track-duration">${s.created||''}</div>
+        <div class="track-actions">
+          <button class="track-action-btn ${isLiked?'liked':''}" onclick="event.stopPropagation();toggleLike('${s.id}')" title="Like">${isLiked?'♥':'♡'}</button>
+          <button class="track-action-btn" onclick="event.stopPropagation();addToQueuePrompt(${chapterId},${i})" title="Add to playlist">+</button>
+        </div></div>`;
+    }).join('')}`;
+}
+
+// ── Play ──
+function playCourse(chapterId,songIndex){
+  const ch=CHAPTERS.find(c=>c.id==chapterId);if(!ch||!ch.songs[songIndex])return;
+  currentChapterId=chapterId;currentSongIndex=songIndex;
+  const ep=ch.songs[songIndex];
+  recentlyPlayed=recentlyPlayed.filter(r=>!(r.chapterId==chapterId&&r.songIndex===songIndex));
+  recentlyPlayed.unshift({chapterId,songIndex});if(recentlyPlayed.length>20)recentlyPlayed=recentlyPlayed.slice(0,20);
+  localStorage.setItem('ef_recent',JSON.stringify(recentlyPlayed));
+  document.getElementById('player-title').textContent=ep.title;
+  document.getElementById('player-artist').textContent='Dr. Ibrahim El-Feki · '+ch.name;
+  document.getElementById('player-thumb').textContent=ch.icon||'📚';
+  updatePlayerHeart(String(ep.id));
+  isPlaying=true;document.getElementById('play-pause-btn').textContent='⏸';
+  document.querySelectorAll('.track-row').forEach(r=>r.classList.remove('playing'));
+  document.querySelectorAll(`[data-ep-id="${ep.id}"]`).forEach(r=>r.classList.add('playing'));
+  simulatePlayback(2700); // simulate ~45 min
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+}
+function playCourseFromStart(){if(currentChapterId!=null)playCourse(currentChapterId,0);}
+function playNext(){
+  if(currentChapterId==null)return;const ch=CHAPTERS.find(c=>c.id==currentChapterId);if(!ch)return;
+  if(repeatMode===2){playCourse(currentChapterId,currentSongIndex);return;}
+  if(isShuffle){playCourse(currentChapterId,Math.floor(Math.random()*ch.songs.length));return;}
+  let next=currentSongIndex+1;
+  if(next>=ch.songs.length){if(repeatMode===1)next=0;else{isPlaying=false;document.getElementById('play-pause-btn').textContent='▶';return;}}
+  playCourse(currentChapterId,next);
+}
+function playPrev(){
+  if(currentChapterId==null)return;if(simTime>3){simTime=0;return;}
+  const ch=CHAPTERS.find(c=>c.id==currentChapterId);if(!ch)return;
+  let prev=currentSongIndex-1;if(prev<0)prev=ch.songs.length-1;
+  playCourse(currentChapterId,prev);
+}
+function togglePlayPause(){isPlaying=!isPlaying;document.getElementById('play-pause-btn').textContent=isPlaying?'⏸':'▶';}
+function toggleShuffle(){isShuffle=!isShuffle;document.getElementById('shuffle-btn').classList.toggle('active',isShuffle);toast(isShuffle?'Shuffle on':'Shuffle off');}
+function toggleRepeat(){repeatMode=(repeatMode+1)%3;const b=document.getElementById('repeat-btn');b.classList.toggle('active',repeatMode>0);b.textContent=repeatMode===2?'🔂':'🔁';toast(['Repeat off','Repeat all','Repeat one'][repeatMode]);}
+function shuffleCourse(){isShuffle=true;document.getElementById('shuffle-btn').classList.add('active');playCourseFromStart();toast('Shuffle on');}
+
+let simTime=0,simTotal=0,simInterval=null;
+function simulatePlayback(totalSec){clearInterval(simInterval);simTime=0;simTotal=totalSec;updateProgressUI();simInterval=setInterval(()=>{if(!isPlaying)return;simTime++;updateProgressUI();if(simTime>=simTotal){clearInterval(simInterval);playNext();}},1000);}
+function updateProgressUI(){document.getElementById('time-current').textContent=formatTime(simTime);document.getElementById('time-total').textContent=formatTime(simTotal);const pct=simTotal>0?(simTime/simTotal*100):0;document.getElementById('progress-fill').style.width=pct+'%';}
+function seekTo(e){const bar=document.getElementById('progress-bar');const rect=bar.getBoundingClientRect();simTime=Math.floor(Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width))*simTotal);updateProgressUI();}
+function setVolume(val){document.getElementById('vol-icon').textContent=val==0?'🔇':val<50?'🔉':'🔊';}
+function toggleMute(){const s=document.getElementById('volume-slider');if(s.value>0){s.dataset.prev=s.value;s.value=0;}else{s.value=s.dataset.prev||70;}setVolume(s.value);}
+
+// ── Likes ──
+function toggleLike(epId){
+  const idx=liked.indexOf(epId);if(idx>=0){liked.splice(idx,1);toast('Removed from Liked');}
+  else{liked.push(epId);toast('Added to Liked ♥');}
+  localStorage.setItem('ef_liked',JSON.stringify(liked));refreshCurrentView();updatePlayerHeart(epId);
+}
+function updatePlayerHeart(epId){const b=document.getElementById('player-heart-btn');if(liked.includes(epId)){b.textContent='♥';b.classList.add('liked');}else{b.textContent='♡';b.classList.remove('liked');}}
+function toggleCurrentLike(){if(currentChapterId==null)return;const ch=CHAPTERS.find(c=>c.id==currentChapterId);if(!ch)return;const ep=ch.songs[currentSongIndex];if(ep)toggleLike(String(ep.id));}
+
+function renderLiked(){
+  const allEp=[];
+  CHAPTERS.forEach((c,ci)=>c.songs&&c.songs.forEach((s,si)=>{if(liked.includes(String(s.id)))allEp.push({...s,chapter:c,chapterId:c.id,songIndex:si,color:COURSE_COLORS[ci%COURSE_COLORS.length]});}));
+  document.getElementById('liked-count').textContent=allEp.length+' episode'+(allEp.length!==1?'s':'');
+  const container=document.getElementById('liked-track-list');
+  if(allEp.length===0){container.innerHTML='<p style="color:var(--text-subdued);text-align:center;padding:3rem;">No liked episodes yet. Tap ♡ on any episode to save it here.</p>';return;}
+  container.innerHTML=allEp.map((ep,i)=>`<div class="track-row" onclick="playCourse(${ep.chapterId},${ep.songIndex})">
+    <div class="track-num"><span class="num-text">${i+1}</span><span class="play-icon">▶</span></div>
+    <div class="track-info"><div class="track-title">${ep.title}</div><div class="track-subtitle">${ep.chapter.name}</div></div>
+    <div class="track-duration">${ep.created||''}</div>
+    <div class="track-actions"><button class="track-action-btn liked" onclick="event.stopPropagation();toggleLike('${ep.id}')">♥</button></div></div>`).join('');
+}
+function playLiked(){
+  const allEp=[];CHAPTERS.forEach(c=>c.songs&&c.songs.forEach((s,si)=>{if(liked.includes(String(s.id)))allEp.push({chapterId:c.id,songIndex:si});}));
+  if(allEp.length>0)playCourse(allEp[0].chapterId,allEp[0].songIndex);
+}
+
+// ── Library ──
+function renderLibrary(){
+  renderCardGrid('library-grid',CHAPTERS.filter(c=>c.songs&&c.songs.length>0).map((c,i)=>({
+    id:c.id,icon:c.icon||'📚',title:c.name,subtitle:`${c.songs.length} episodes · Dr. El-Feki`,color:COURSE_COLORS[i%COURSE_COLORS.length],
+    onclick:`showCourse(${c.id})`,playBtn:`event.stopPropagation();playCourse(${c.id},0)`
+  })));
+}
+function filterLibrary(type,btn){
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));btn.classList.add('active');
+  if(type==='all'||type==='courses'){renderLibrary();return;}
+  if(type==='liked'){
+    const allEp=[];CHAPTERS.forEach((c,ci)=>c.songs&&c.songs.forEach((s,si)=>{if(liked.includes(String(s.id)))allEp.push({id:s.id,icon:c.icon||'📚',title:s.title,subtitle:c.name,color:COURSE_COLORS[ci%COURSE_COLORS.length],onclick:`playCourse(${c.id},${si})`,playBtn:`event.stopPropagation();playCourse(${c.id},${si})`});}));
+    renderCardGrid('library-grid',allEp);
   }
-
-  updateBgMusicBtn();
 }
 
-function toggleBgMusic() {
-  bgMusicEnabled = !bgMusicEnabled;
-  localStorage.setItem('elfeki_bg_music_enabled', bgMusicEnabled);
-
-  if (bgMusicEnabled && bgMusic) {
-    bgMusic.play().catch(() => {});
-    showToast('Background music on');
-  } else if (bgMusic) {
-    bgMusic.pause();
-    showToast('Background music off');
-  }
-
-  updateBgMusicBtn();
+// ── Search ──
+function renderBrowse(){
+  const categories=[
+    {name:'Positive Thinking',color:'#1DB954',emoji:'☀️'},{name:'Time',color:'#e91e63',emoji:'⏳'},
+    {name:'Self-Improvement',color:'#ff9800',emoji:'🚀'},{name:'Goals',color:'#9c27b0',emoji:'🎯'},
+    {name:'Communication',color:'#03a9f4',emoji:'💬'},{name:'Motivation',color:'#f44336',emoji:'💪'},
+    {name:'Mindfulness',color:'#4caf50',emoji:'🧘'},{name:'Leadership',color:'#ffc107',emoji:'👑'},
+    {name:'Creativity',color:'#673ab7',emoji:'🎨'},{name:'Health',color:'#00bcd4',emoji:'❤️‍🩹'},
+    {name:'Finance',color:'#607d8b',emoji:'💰'},{name:'Education',color:'#795548',emoji:'📚'}
+  ];
+  document.getElementById('browse-cards').innerHTML=categories.map(c=>`<div class="browse-card" style="background:${c.color};" onclick="searchCategory('${c.name}')">${c.name}<span class="cat-emoji">${c.emoji}</span></div>`).join('');
 }
-
-function setBgMusicVolume(vol) {
-  if (bgMusic) bgMusic.volume = Math.max(0, Math.min(1, vol));
-  localStorage.setItem('elfeki_bg_music_volume', vol);
-}
-
-function updateBgMusicBtn() {
-  const btn = document.getElementById('np-bg-music-btn');
-  if (btn) {
-    btn.textContent = bgMusicEnabled ? '🎵' : '🔇';
-    btn.title = bgMusicEnabled ? 'Mute background music' : 'Play background music';
-  }
-}
-
-// ─── Scroll Animations ──────────────────────────────────────────────────────
-function initScrollAnimations() {
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
-
-  document.querySelectorAll('.chapter-card, .feature-card, .animate-on-scroll').forEach(el => {
-    el.classList.add('scroll-hidden');
-    observer.observe(el);
+function handleSearch(query){
+  const rs=document.getElementById('search-results'),bd=document.getElementById('browse-cards');
+  if(!query.trim()){rs.style.display='none';bd.style.display='';return;}
+  bd.style.display='none';rs.style.display='';
+  const q=query.toLowerCase();const results=[];
+  CHAPTERS.forEach(c=>{
+    if(c.name.toLowerCase().includes(q))results.push({type:'chapter',chapter:c});
+    (c.songs||[]).forEach((s,i)=>{if(s.title.toLowerCase().includes(q)||c.name.toLowerCase().includes(q))results.push({type:'song',song:s,chapter:c,songIndex:i});});
   });
+  const list=document.getElementById('search-track-list');
+  if(results.length===0){list.innerHTML='<p style="color:var(--text-subdued);text-align:center;padding:2rem;">No results for "'+query+'"</p>';return;}
+  list.innerHTML=results.map((r,i)=>{
+    if(r.type==='chapter')return`<div class="track-row" onclick="showCourse(${r.chapter.id})"><div class="track-num">${r.chapter.icon||'📚'}</div><div class="track-info"><div class="track-title">${r.chapter.name}</div><div class="track-subtitle">Course · ${(r.chapter.songs||[]).length} episodes</div></div><div></div><div></div></div>`;
+    return`<div class="track-row" onclick="playCourse(${r.chapter.id},${r.songIndex})"><div class="track-num"><span class="num-text">${i+1}</span><span class="play-icon">▶</span></div><div class="track-info"><div class="track-title">${r.song.title}</div><div class="track-subtitle">${r.chapter.name}</div></div><div class="track-duration">${r.song.created||''}</div><div></div></div>`;
+  }).join('');
+}
+function searchCategory(name){document.getElementById('search-input').value=name;handleSearch(name);}
+
+// ── Playlists ──
+function showCreatePlaylist(){document.getElementById('modal-overlay').classList.add('open');document.getElementById('new-pl-name').focus();}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+function createPlaylist(){
+  const name=document.getElementById('new-pl-name').value.trim();if(!name){toast('Enter a name');return;}
+  playlists.push({id:'pl_'+Date.now(),name,episodes:[]});localStorage.setItem('ef_playlists',JSON.stringify(playlists));
+  document.getElementById('new-pl-name').value='';closeModal();renderSidebarPlaylists();toast('Playlist created');
+}
+function renderSidebarPlaylists(){
+  document.getElementById('playlist-list').innerHTML=playlists.map(pl=>`<a class="sidebar-playlist-item" href="#" onclick="showPlaylist('${pl.id}');return false;">${pl.name}</a>`).join('');
+}
+function showPlaylist(plId){
+  const pl=playlists.find(p=>p.id===plId);if(!pl)return;currentPlaylistId=plId;
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-playlist').classList.add('active');document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('pl-title').textContent=pl.name;
+  document.getElementById('pl-count').textContent=pl.episodes.length+' episode'+(pl.episodes.length!==1?'s':'');
+  const container=document.getElementById('pl-track-list');
+  if(pl.episodes.length===0){container.innerHTML='<p style="color:var(--text-subdued);text-align:center;padding:3rem;">This playlist is empty. Click + on any episode to add it.</p>';return;}
+  container.innerHTML=pl.episodes.map((item,i)=>{
+    const ch=CHAPTERS.find(c=>c.id==item.chapterId);if(!ch||!ch.songs[item.songIndex])return'';
+    const ep=ch.songs[item.songIndex];
+    return`<div class="track-row" onclick="playCourse(${ch.id},${item.songIndex})"><div class="track-num"><span class="num-text">${i+1}</span><span class="play-icon">▶</span></div><div class="track-info"><div class="track-title">${ep.title}</div><div class="track-subtitle">${ch.name}</div></div><div class="track-duration">${ep.created||''}</div><div class="track-actions"><button class="track-action-btn" onclick="event.stopPropagation();removeFromPlaylist(${i})" style="opacity:1;color:#e74c3c;">✕</button></div></div>`;
+  }).join('');
+}
+function playPlaylistFromStart(){if(!currentPlaylistId)return;const pl=playlists.find(p=>p.id===currentPlaylistId);if(pl&&pl.episodes.length>0)playCourse(pl.episodes[0].chapterId,pl.episodes[0].songIndex);}
+function deleteCurrentPlaylist(){if(!currentPlaylistId||!confirm('Delete this playlist?'))return;playlists=playlists.filter(p=>p.id!==currentPlaylistId);localStorage.setItem('ef_playlists',JSON.stringify(playlists));renderSidebarPlaylists();showView('home');toast('Playlist deleted');}
+function removeFromPlaylist(index){if(!currentPlaylistId)return;const pl=playlists.find(p=>p.id===currentPlaylistId);if(!pl)return;pl.episodes.splice(index,1);localStorage.setItem('ef_playlists',JSON.stringify(playlists));showPlaylist(currentPlaylistId);toast('Removed from playlist');}
+function addToQueuePrompt(chapterId,songIndex){
+  if(playlists.length===0){showCreatePlaylist();toast('Create a playlist first');return;}
+  const pl=playlists[playlists.length-1];const key=`${chapterId}_${songIndex}`;
+  if(pl.episodes.find(e=>`${e.chapterId}_${e.songIndex}`===key)){toast('Already in '+pl.name);return;}
+  pl.episodes.push({chapterId,songIndex});localStorage.setItem('ef_playlists',JSON.stringify(playlists));toast('Added to '+pl.name);
 }
 
-// ─── Cookie Consent ──────────────────────────────────────────────────────────
-function initCookieBanner() {
-  if (localStorage.getItem('elfeki_cookies_accepted')) return;
-
-  const banner = document.createElement('div');
-  banner.id = 'cookie-banner';
-  Object.assign(banner.style, {
-    position: 'fixed', bottom: '0', left: '0', right: '0',
-    background: 'var(--bg-overlay, #2d3436)', color: '#fff',
-    padding: '16px 24px', display: 'flex', alignItems: 'center',
-    justifyContent: 'space-between', gap: '16px', zIndex: '9000',
-    flexWrap: 'wrap', fontSize: '14px'
-  });
-  banner.innerHTML = `
-    <span>We use cookies to improve your experience. By continuing, you agree to our cookie policy.</span>
-    <button id="cookie-accept" style="background:var(--accent,#6c5ce7);color:#fff;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-weight:600;white-space:nowrap;">Accept</button>
-  `;
-  document.body.appendChild(banner);
-
-  document.getElementById('cookie-accept').addEventListener('click', () => {
-    localStorage.setItem('elfeki_cookies_accepted', '1');
-    banner.remove();
-  });
+// ── Queue ──
+function toggleQueue(){document.getElementById('queue-panel').classList.toggle('open');renderQueue();}
+function renderQueue(){
+  const list=document.getElementById('queue-list');
+  if(currentChapterId==null){list.innerHTML='<p style="color:var(--text-subdued);text-align:center;padding:2rem;">No active queue</p>';return;}
+  const ch=CHAPTERS.find(c=>c.id==currentChapterId);if(!ch)return;
+  list.innerHTML='<h4 style="padding:0.5rem;color:var(--text-subdued);font-size:0.8rem;text-transform:uppercase;">Now Playing</h4>'+
+    (ch.songs||[]).map((s,i)=>{const isCurrent=i===currentSongIndex;return`<div class="track-row ${isCurrent?'playing':''}" onclick="playCourse(${ch.id},${i})"><div class="track-num">${isCurrent?'🔊':i+1}</div><div class="track-info"><div class="track-title">${s.title}</div></div><div></div><div></div></div>`;}).join('');
 }
 
-// ─── Ads ─────────────────────────────────────────────────────────────────────
-function initAds() {
-  const adSlots = document.querySelectorAll('.ad-slot');
-  adSlots.forEach(slot => {
-    // In production, replace with real ad network code
-    // For now, hide empty ad slots gracefully
-    if (!slot.querySelector('iframe') && !slot.querySelector('img')) {
-      slot.style.display = 'none';
-    }
-  });
+// ── Events ──
+document.getElementById('mobile-menu-btn')?.addEventListener('click',()=>{document.getElementById('sidebar').classList.toggle('open');});
+document.querySelector('.main-content')?.addEventListener('click',()=>{document.getElementById('sidebar').classList.remove('open');});
+document.querySelectorAll('.nav-item').forEach(item=>{item.addEventListener('click',(e)=>{e.preventDefault();const view=item.dataset.view;if(view)showView(view);});});
+
+function refreshCurrentView(){
+  const active=document.querySelector('.view.active');if(!active)return;
+  if(active.id==='view-home')renderHome();if(active.id==='view-library')renderLibrary();if(active.id==='view-liked')renderLiked();
+  if(active.id==='view-course'&&currentChapterId!=null){const ch=CHAPTERS.find(c=>c.id==currentChapterId);if(ch)renderTrackList('course-track-list',ch.songs||[],currentChapterId);}
 }
 
-// ─── Boot ────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', async () => {
-  try {
-    await PersistDB.init();
-  } catch (e) {
-    console.warn('PersistDB init failed, using fallback:', e);
-  }
-
-  let loaded = false;
-
-  // 1) Read from live Vercel API first
-  try {
-    const res = await fetch('/api/data?action=read&t=' + Date.now());
-    if (res.ok) {
-      const apiData = await res.json();
-      if (apiData && Array.isArray(apiData.chapters) && apiData.chapters.length > 0) {
-        chapters = apiData.chapters;
-        PersistDB._chapters = apiData.chapters;
-        PersistDB._nextId = apiData.settings?.nextId || { chapter: 7, song: 31 };
-        PersistDB._admin = apiData.settings?.admin || { email: '', password: '' };
-        PersistDB._save();
-        loaded = true;
-        console.log('Loaded chapters from /api/data');
-      }
-    }
-  } catch (e) {
-    console.warn('API load failed:', e);
-  }
-
-  // 2) Fallback to local persisted storage
-  if (!loaded) {
-    try {
-      chapters = PersistDB.getChapters() || [];
-      if (chapters.length > 0) {
-        loaded = true;
-        console.log('Loaded chapters from PersistDB');
-      }
-    } catch (e) {
-      console.warn('PersistDB fallback failed:', e);
-    }
-  }
-
-  // 3) Final fallback to static data.json
-  if (!loaded) {
-    try {
-      const resp = await fetch('data.json?t=' + Date.now());
-      if (resp.ok) {
-        const serverData = await resp.json();
-        if (serverData && Array.isArray(serverData.chapters)) {
-          chapters = serverData.chapters;
-          PersistDB._chapters = serverData.chapters;
-          PersistDB._nextId = serverData.nextId || { chapter: 7, song: 31 };
-          PersistDB._admin = serverData.admin || { email: '', password: '' };
-          PersistDB._save();
-          loaded = true;
-          console.log('Loaded chapters from data.json fallback');
-        }
-      }
-    } catch (e) {
-      console.warn('data.json fallback failed:', e);
-    }
-  }
-
-  if (!loaded) {
-    chapters = [];
-  }
-
-  try {
-    playlist = PersistDB.getPlaylist() || [];
-  } catch (e) {
-    console.warn('Failed to load playlist:', e);
-    try {
-      playlist = JSON.parse(localStorage.getItem('elfeki_playlist') || '[]');
-    } catch (_) {
-      playlist = [];
-    }
-  }
-
-  audio = document.getElementById('player');
-
-  initTheme();
-  initNav();
-  initScrollAnimations();
-  initChapters();
-  initCookieBanner();
-  initAds();
-  initBgMusic();
-
-  // Ensure now-playing bar exists with controls
-  ensureNowPlayingBar();
-
-  renderChapters();
-
-  // Update hero stats
-  try {
-    const chEl = document.getElementById('chCount');
-    const epEl = document.getElementById('epCount');
-    if (chEl) chEl.textContent = chapters.length;
-    if (epEl) epEl.textContent = chapters.reduce((s, c) => s + ((c.songs || []).length), 0);
-  } catch(e) {}
-});
-
-// ─── Ensure Now Playing Bar Has All Controls ─────────────────────────────────
-function ensureNowPlayingBar() {
-  const bar = document.getElementById('now-playing');
-  if (!bar) return;
-
-  // Inject controls if missing
-  if (!document.getElementById('np-play-pause')) {
-    const controls = bar.querySelector('.np-controls');
-    if (controls) {
-      controls.innerHTML = `
-        <button id="np-prev" class="np-btn" title="Previous">⏮</button>
-        <button id="np-play-pause" class="np-btn" title="Play/Pause">▶</button>
-        <button id="np-next" class="np-btn" title="Next">⏭</button>
-        <button id="np-playlist-btn" class="np-btn" title="Playlist">📋</button>
-        <button id="np-bg-music-btn" class="np-btn" title="Background music">🎵</button>
-      `;
-    }
-  }
-
-  // Progress bar
-  if (!document.getElementById('np-progress-bar')) {
-    const progWrap = bar.querySelector('.np-progress-wrap');
-    if (progWrap) {
-      progWrap.innerHTML = `
-        <div id="np-progress-bar" style="width:100%;height:6px;background:var(--border,#ddd);border-radius:3px;cursor:pointer;position:relative;">
-          <div id="np-progress" style="width:0%;height:100%;background:var(--accent,#6c5ce7);border-radius:3px;transition:width 0.1s linear;"></div>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-secondary,#999);margin-top:4px;">
-          <span id="np-current-time">0:00</span>
-          <span id="np-duration">0:00</span>
-        </div>
-      `;
-    }
-  }
-}
+// ── Init ──
+(async function(){
+  try{
+    const resp=await fetch('data.json');const data=await resp.json();
+    CHAPTERS=data.chapters||[];
+    document.getElementById('greeting-text').textContent=getGreeting();
+    renderHome();renderSidebarPlaylists();
+  }catch(e){console.warn('Failed to load data.json',e);}
+  document.addEventListener('keydown',(e)=>{if(e.target.tagName==='INPUT')return;if(e.code==='Space'){e.preventDefault();togglePlayPause();}if(e.code==='ArrowRight'&&e.shiftKey)playNext();if(e.code==='ArrowLeft'&&e.shiftKey)playPrev();});
+})();
