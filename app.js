@@ -138,6 +138,12 @@ function playCourse(chapterId,songIndex){
   document.querySelectorAll('.track-row').forEach(r=>r.classList.remove('playing'));
   document.querySelectorAll(`[data-ep-id="${ep.id}"]`).forEach(r=>r.classList.add('playing'));
   simulatePlayback(2700); // simulate ~45 min
+  // Save play count via DB (Supabase + GitHub backup)
+  if(typeof DB !== 'undefined' && DB.save){
+    const song = ch.songs[songIndex];
+    if(song) song.plays = (song.plays || 0) + 1;
+    DB.save('Play count: ' + ep.title).catch(()=>{});
+  }
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
 }
 function playCourseFromStart(){if(currentChapterId!=null)playCourse(currentChapterId,0);}
@@ -314,14 +320,51 @@ function initTheme(){
   updateThemeLabel(saved);
 }
 
+// ── Cloudinary Upload Helper ──
+async function uploadToCloudinary(file, onProgress){
+  if(typeof DB !== 'undefined' && DB.uploadFile){
+    return DB.uploadFile(file, 'podcast', onProgress);
+  }
+  // Fallback: direct Cloudinary upload
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', 'https://api.cloudinary.com/v1_1/dse1s0loh/auto/upload');
+    xhr.upload.addEventListener('progress', (e) => {
+      if(e.lengthComputable && onProgress) onProgress(Math.round((e.loaded/e.total)*100));
+    });
+    xhr.onload = () => {
+      if(xhr.status === 200){
+        const result = JSON.parse(xhr.responseText);
+        resolve({ url: result.secure_url, path: result.public_id });
+      } else {
+        reject(new Error('Upload failed: ' + xhr.status));
+      }
+    };
+    xhr.onerror = () => reject(new Error('Network error'));
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('upload_preset', 'ml_default');
+    xhr.send(fd);
+  });
+}
+
 // ── Init ──
 (async function(){
   initTheme(); // always dark by default
   try{
-    const resp=await fetch('data.json');const data=await resp.json();
-    CHAPTERS=data.chapters||[];
+    // Use the DB class from config.js (connects to Supabase via Vercel API)
+    if(typeof DB !== 'undefined'){
+      await DB.init();
+      const data = DB.getData();
+      CHAPTERS = data.chapters || [];
+    } else {
+      // Fallback: direct data.json fetch (GitHub Pages static)
+      const resp = await fetch('data.json?t=' + Date.now());
+      const data = await resp.json();
+      CHAPTERS = data.chapters || [];
+    }
     document.getElementById('greeting-text').textContent=getGreeting();
     renderHome();renderSidebarPlaylists();
-  }catch(e){console.warn('Failed to load data.json',e);}
+  }catch(e){console.warn('Failed to load data:',e);}
   document.addEventListener('keydown',(e)=>{if(e.target.tagName==='INPUT')return;if(e.code==='Space'){e.preventDefault();togglePlayPause();}if(e.code==='ArrowRight'&&e.shiftKey)playNext();if(e.code==='ArrowLeft'&&e.shiftKey)playPrev();});
 })();
