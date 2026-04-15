@@ -723,43 +723,77 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.warn('PersistDB init failed, using fallback:', e);
   }
 
-  // ── Load data: SERVER FIRST always ──
   let loaded = false;
+
+  // 1) Read from live Vercel API first
   try {
-    const resp = await fetch('data.json?t=' + Date.now());
-    if (resp.ok) {
-      const serverData = await resp.json();
-      if (serverData.chapters && serverData.chapters.length > 0) {
-        chapters = serverData.chapters;
-        PersistDB._chapters = serverData.chapters;
-        PersistDB._nextId = serverData.nextId || { chapter: 7, song: 31 };
+    const res = await fetch('/api/data?action=read&t=' + Date.now());
+    if (res.ok) {
+      const apiData = await res.json();
+      if (apiData && Array.isArray(apiData.chapters) && apiData.chapters.length > 0) {
+        chapters = apiData.chapters;
+        PersistDB._chapters = apiData.chapters;
+        PersistDB._nextId = apiData.settings?.nextId || { chapter: 7, song: 31 };
+        PersistDB._admin = apiData.settings?.admin || { email: '', password: '' };
         PersistDB._save();
         loaded = true;
-        console.log('[App] Loaded from server: ' + chapters.length + ' chapters');
+        console.log('Loaded chapters from /api/data');
       }
     }
-  } catch (e) { /* fallback below */ }
+  } catch (e) {
+    console.warn('API load failed:', e);
+  }
 
+  // 2) Fallback to local persisted storage
   if (!loaded) {
     try {
       chapters = PersistDB.getChapters() || [];
+      if (chapters.length > 0) {
+        loaded = true;
+        console.log('Loaded chapters from PersistDB');
+      }
     } catch (e) {
-      console.warn('Failed to load chapters:', e);
-      chapters = [];
+      console.warn('PersistDB fallback failed:', e);
     }
+  }
+
+  // 3) Final fallback to static data.json
+  if (!loaded) {
+    try {
+      const resp = await fetch('data.json?t=' + Date.now());
+      if (resp.ok) {
+        const serverData = await resp.json();
+        if (serverData && Array.isArray(serverData.chapters)) {
+          chapters = serverData.chapters;
+          PersistDB._chapters = serverData.chapters;
+          PersistDB._nextId = serverData.nextId || { chapter: 7, song: 31 };
+          PersistDB._admin = serverData.admin || { email: '', password: '' };
+          PersistDB._save();
+          loaded = true;
+          console.log('Loaded chapters from data.json fallback');
+        }
+      }
+    } catch (e) {
+      console.warn('data.json fallback failed:', e);
+    }
+  }
+
+  if (!loaded) {
+    chapters = [];
   }
 
   try {
     playlist = PersistDB.getPlaylist() || [];
   } catch (e) {
     console.warn('Failed to load playlist:', e);
-    // Fallback from localStorage
     try {
       playlist = JSON.parse(localStorage.getItem('elfeki_playlist') || '[]');
     } catch (_) {
       playlist = [];
     }
   }
+
+  audio = document.getElementById('player');
 
   initTheme();
   initNav();
