@@ -14,16 +14,20 @@
           "created": "2026-04-15T14:45:00Z",
           "duration": "3:38",
           "plays": 0
+        },
+        {
+          "id": 2,
+          "title": "Transforming Lives with Positivity",
+          "audio": "https://res.cloudinary.com/dse1s0loh/video/upload/v1776264751/elfeki/audio/song2_c3wmb6.mp3",
+          "image": "https://res.cloudinary.com/dse1s0loh/image/upload/v1776264752/elfeki/covers/song2_cover_pxipat.png",
+          "file_path": "elfeki/audio/song2_c3wmb6",
+          "created": "2026-04-15T14:50:00Z",
+          "duration": "2:02",
+          "plays": 0
         }
       ]
     }
   ],
-  "nextId": {
-    "chapter": 2,
-    "song": 2
-  },
-  "admin": {
-    "email": "galalemad75@gmail.com",
-    "password": "ElFeki2026!"
-  }
+  "nextId": { "chapter": 2, "song": 3 },
+  "admin": { "email": "galalemad75@gmail.com", "password": "ElFeki2026!" }
 }
