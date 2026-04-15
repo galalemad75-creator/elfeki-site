@@ -126,7 +126,31 @@ function renderTrackList(containerId,songs,chapterId){
     }).join('')}`;
 }
 
-// ── Play ──
+// ── Cover Background ──
+function setCoverBackground(imgUrl) {
+  let bg = document.getElementById('cover-bg');
+  if (!bg) {
+    bg = document.createElement('div');
+    bg.id = 'cover-bg';
+    bg.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:-1;pointer-events:none;transition:opacity 0.8s ease;opacity:0;background-size:cover;background-position:center;background-repeat:no-repeat;';
+    document.body.prepend(bg);
+  }
+  let overlay = document.getElementById('cover-bg-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'cover-bg-overlay';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:-1;pointer-events:none;background:rgba(0,0,0,0.55);backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);transition:opacity 0.8s ease;opacity:0;';
+    document.body.prepend(overlay);
+  }
+  if (imgUrl) {
+    bg.style.backgroundImage = `url(${imgUrl})`;
+    bg.style.opacity = '1';
+    overlay.style.opacity = '1';
+  } else {
+    bg.style.opacity = '0';
+    overlay.style.opacity = '0';
+  }
+}
 function playCourse(chapterId,songIndex){
   const ch=CHAPTERS.find(c=>c.id==chapterId);if(!ch||!ch.songs[songIndex])return;
   currentChapterId=chapterId;currentSongIndex=songIndex;
@@ -137,6 +161,10 @@ function playCourse(chapterId,songIndex){
   document.getElementById('player-title').textContent=ep.title;
   document.getElementById('player-artist').textContent='Dr. Ibrahim El-Feki · '+ch.name;
   document.getElementById('player-thumb').textContent=ch.icon||'📚';
+
+  // Show cover image as full background
+  setCoverBackground(ep.image || '');
+
   updatePlayerHeart(String(ep.id));
   isPlaying=true;document.getElementById('play-pause-btn').textContent='⏸';
   document.querySelectorAll('.track-row').forEach(r=>r.classList.remove('playing'));
