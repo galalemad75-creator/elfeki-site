@@ -395,7 +395,7 @@ function showPlaylistPanel() {
     Object.assign(panel.style, {
       position: 'fixed', top: '0', right: '0', width: '360px', maxWidth: '92vw',
       height: '100vh', background: 'var(--bg, #fff)', color: 'var(--text, #333)',
-      boxShadow: '-4px 0 20px rgba(0,0,0,0.15)', zIndex: '9999',
+      boxShadow: '-4px 0 20px rgba(0,0,0,0.15)', zIndex: '501',
       overflowY: 'auto', display: 'flex', flexDirection: 'column'
     });
     document.body.appendChild(panel);
@@ -414,7 +414,7 @@ function showPlaylistPanel() {
   if (!bd) {
     bd = document.createElement('div');
     bd.id = 'pl-backdrop';
-    Object.assign(bd.style, { position: 'fixed', top: '0', left: '0', width: '100%', height: '100%', background: 'rgba(0,0,0,0.4)', zIndex: '9998', display: 'none' });
+    Object.assign(bd.style, { position: 'fixed', top: '0', left: '0', width: '100%', height: '100%', background: 'rgba(0,0,0,0.4)', zIndex: '500', display: 'none' });
     bd.addEventListener('click', hidePlaylistPanel);
     document.body.appendChild(bd);
   }
