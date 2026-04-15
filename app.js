@@ -295,8 +295,28 @@ function refreshCurrentView(){
   if(active.id==='view-course'&&currentChapterId!=null){const ch=CHAPTERS.find(c=>c.id==currentChapterId);if(ch)renderTrackList('course-track-list',ch.songs||[],currentChapterId);}
 }
 
+// ── Theme Toggle ──
+function toggleTheme(){
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('ef_theme', next);
+  updateThemeLabel(next);
+  toast(next === 'dark' ? '🌙 Dark Mode' : '☀️ Light Mode');
+}
+function updateThemeLabel(theme){
+  const label = document.getElementById('theme-label');
+  if(label) label.textContent = theme === 'dark' ? '🌙 Dark Mode' : '☀️ Light Mode';
+}
+function initTheme(){
+  const saved = localStorage.getItem('ef_theme') || 'dark'; // dark as default
+  document.documentElement.setAttribute('data-theme', saved);
+  updateThemeLabel(saved);
+}
+
 // ── Init ──
 (async function(){
+  initTheme(); // always dark by default
   try{
     const resp=await fetch('data.json');const data=await resp.json();
     CHAPTERS=data.chapters||[];

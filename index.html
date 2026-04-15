@@ -35,6 +35,12 @@
         <button class="sidebar-btn" onclick="showCreatePlaylist()"><span class="btn-icon plus">+</span><span>Create Playlist</span></button>
         <button class="sidebar-btn" onclick="showView('liked')"><span class="btn-icon heart">♥</span><span>Liked Episodes</span></button>
       </div>
+      <div class="theme-toggle-wrapper">
+        <button class="theme-toggle-btn" id="theme-toggle" onclick="toggleTheme()">
+          <span id="theme-label">🌙 Dark Mode</span>
+          <div class="theme-toggle-track"></div>
+        </button>
+      </div>
     </div>
     <div class="sidebar-playlists" id="sidebar-playlists"><div class="playlist-label">Your Playlists</div><div id="playlist-list"></div></div>
     <div class="sidebar-footer"><a href="about.html">About</a><a href="privacy.html">Privacy</a><a href="contact.html">Contact</a><a href="terms.html">Terms</a></div>
