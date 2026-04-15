@@ -1,5 +1,23 @@
 {
-  "chapters": [],
-  "nextId": { "chapter": 1, "song": 1 },
+  "chapters": [
+    {
+      "id": 1,
+      "name": "Positive Thinking",
+      "icon": "☀️",
+      "songs": [
+        {
+          "id": 1,
+          "title": "The Essence of Positive Thinking",
+          "audio": "",
+          "image": "https://res.cloudinary.com/dse1s0loh/image/upload/v1776264397/elfeki/covers/screenshot_pibuax.png",
+          "file_path": "elfeki/covers/screenshot_pibuax",
+          "created": "2026-04-15T14:45:00Z",
+          "duration": "",
+          "plays": 0
+        }
+      ]
+    }
+  ],
+  "nextId": { "chapter": 2, "song": 2 },
   "admin": { "email": "galalemad75@gmail.com", "password": "ElFeki2026!" }
 }
