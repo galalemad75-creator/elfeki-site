@@ -1,18 +1,17 @@
 /**
- * El-Feki App.js — Complete Application Logic
- * Features: Playlist system, cross-chapter playback, background music,
- * PersistDB integration, theme toggle, scroll animations, cookie/ads, nav
+ * El-Feki App.js — Complete + Fixed
+ * Bugs fixed: time progress, playlist, cross-chapter
  */
 
 // ─── State ───────────────────────────────────────────────────────────────────
 let chapters = [];
 let currentChapter = null;
 let currentSongIndex = -1;
-let audio = null;            // main song audio
+let audio = null;
 let isPlaying = false;
 
 // Playlist
-let playlist = [];           // [{id, title, audio, image, chapterName, chapterId}]
+let playlist = [];
 let playlistIndex = -1;
 let isPlaylistMode = false;
 
@@ -46,24 +45,19 @@ function initTheme() {
   document.documentElement.setAttribute('data-theme', saved);
   updateThemeIcon(saved);
 }
-
 function toggleTheme() {
-  const current = document.documentElement.getAttribute('data-theme');
-  const next = current === 'dark' ? 'light' : 'dark';
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
   localStorage.setItem('elfeki_theme', next);
   updateThemeIcon(next);
 }
-
 function updateThemeIcon(theme) {
   const btn = document.getElementById('themeToggle');
-  if (btn) {
-    btn.textContent = theme === 'dark' ? '☀️' : '🌙';
-    btn.setAttribute('aria-label', `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`);
-  }
+  if (btn) { btn.textContent = theme === 'dark' ? '☀️' : '🌙'; }
 }
 
-// ─── Navigation ──────────────────────────────────────────────────────────────
+// ─── Nav ─────────────────────────────────────────────────────────────────────
 function initNav() {
   const hamburger = document.getElementById('hamburger');
   const navLinks = document.getElementById('navMenu');
@@ -72,7 +66,6 @@ function initNav() {
       navLinks.classList.toggle('open');
       hamburger.classList.toggle('active');
     });
-    // Close menu on link click
     navLinks.querySelectorAll('a').forEach(a => {
       a.addEventListener('click', () => {
         navLinks.classList.remove('open');
@@ -80,127 +73,79 @@ function initNav() {
       });
     });
   }
-
-  // Theme toggle button
   const themeBtn = document.getElementById('themeToggle');
   if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
-
-  // Scroll → shrink nav
-  window.addEventListener('scroll', () => {
-    const nav = document.querySelector('.navbar');
-    if (nav) nav.classList.toggle('scrolled', window.scrollY > 50);
-  }, { passive: true });
 }
 
 function showHome() {
-  const hero = document.querySelector('.hero');
-  const features = document.querySelector('.features');
-  const chaptersSection = document.getElementById('chapters') || document.querySelector('.chapters-section');
-  const cta = document.querySelector('.cta-section');
-  const songsView = document.getElementById('songs-view');
-
-  [hero, features, chaptersSection, cta].forEach(el => { if (el) el.style.display = ''; });
-  if (songsView) songsView.style.display = 'none';
-
-  // Hide any playlist panel
+  document.querySelectorAll('.hero,.features,#chapters,.cta-section').forEach(el => { if (el) el.style.display = ''; });
+  var sv = document.getElementById('songs-view');
+  if (sv) sv.style.display = 'none';
   hidePlaylistPanel();
-
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function showSongsView(chapter) {
-  try {
-    // Hide optional sections safely
-    var hero = document.querySelector('.hero');
-    var features = document.querySelector('.features');
-    var chaptersSection = document.getElementById('chapters');
-    var cta = document.querySelector('.cta-section');
-    if (hero) hero.style.display = 'none';
-    if (features) features.style.display = 'none';
-    if (chaptersSection) chaptersSection.style.display = 'none';
-    if (cta) cta.style.display = 'none';
+  document.querySelectorAll('.hero,.features,#chapters,.cta-section').forEach(el => { if (el) el.style.display = 'none'; });
+  var sv = document.getElementById('songs-view');
+  if (!sv) return;
+  sv.style.display = 'block';
 
-    var songsView = document.getElementById('songs-view');
-    if (!songsView) { console.error('songs-view not found'); return; }
-    songsView.style.display = 'block';
+  var ht = document.getElementById('songs-chapter-title');
+  if (ht) ht.textContent = (chapter.title || chapter.name || 'Chapter');
 
-    // Header
-    var headerEl = document.getElementById('songs-chapter-title');
-    if (headerEl) headerEl.textContent = (chapter && (chapter.title || chapter.name)) || 'Chapter';
+  currentChapter = chapter;
+  isPlaylistMode = false;
 
-    currentChapter = chapter;
+  var grid = document.getElementById('songs-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
 
-    // Render song cards
-    var grid = document.getElementById('songs-grid');
-    if (!grid) { console.error('songs-grid not found'); return; }
-    grid.innerHTML = '';
+  (chapter.songs || []).forEach(function(song, i) {
+    var card = document.createElement('div');
+    card.className = 'song-card';
+    card.id = 'sc-' + i;
+    var imgSrc = song.image || song.cover || song.thumbnail || '';
+    var thumb = imgSrc
+      ? '<img class="song-thumb" src="' + imgSrc + '" alt="" style="width:44px;height:44px;border-radius:8px;object-fit:cover;flex-shrink:0;">'
+      : '<div style="width:44px;height:44px;border-radius:8px;background:var(--accent,#6c5ce7);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">🎙️</div>';
+    card.innerHTML = thumb
+      + '<button class="song-play-btn" data-i="' + i + '">▶</button>'
+      + '<span class="song-title">' + (song.title || 'Untitled') + '</span>'
+      + '<button class="song-add-btn" data-i="' + i + '" title="Add to playlist">📋</button>';
 
-    var songs = (chapter && chapter.songs) || [];
-    songs.forEach(function(song, i) {
-      var card = document.createElement('div');
-      card.className = 'song-card';
-      var imgSrc = song.image || song.cover || song.thumbnail || '';
-      var thumbHtml = imgSrc
-        ? '<img class="song-thumb" src="' + imgSrc + '" alt="" style="width:44px;height:44px;border-radius:8px;object-fit:cover;">'
-        : '<div class="song-thumb" style="width:44px;height:44px;border-radius:8px;background:var(--accent,#6c5ce7);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🎙️</div>';
-      card.innerHTML = thumbHtml
-        + '<button class="song-play-btn" data-index="' + i + '" aria-label="Play ' + (song.title || '') + '">▶</button>'
-        + '<span class="song-title">' + (song.title || 'Untitled') + '</span>'
-        + '<button class="song-add-btn" data-index="' + i + '" aria-label="Add to playlist" title="Add to playlist">📋</button>';
+    card.querySelector('.song-play-btn').addEventListener('click', function(e) { e.stopPropagation(); playSong(i); });
+    card.querySelector('.song-add-btn').addEventListener('click', function(e) { e.stopPropagation(); addToPlaylistBtn(chapter.id, i); });
+    card.addEventListener('click', function() { playSong(i); });
+    grid.appendChild(card);
+  });
 
-      card.querySelector('.song-play-btn').addEventListener('click', function(e) {
-        e.stopPropagation();
-        playSong(i);
-      });
-
-      card.querySelector('.song-add-btn').addEventListener('click', function(e) {
-        e.stopPropagation();
-        addToPlaylistBtn(chapter.id, i);
-      });
-
-      card.addEventListener('click', function() { playSong(i); });
-
-      grid.appendChild(card);
-    });
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  } catch(err) {
-    console.error('showSongsView error:', err);
-  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ─── Chapters Grid ───────────────────────────────────────────────────────────
+// ─── Chapters ────────────────────────────────────────────────────────────────
 function initChapters() {
   renderChapters();
-  // Wire back button
-  const backBtn = document.getElementById('songs-back-btn');
+  var backBtn = document.getElementById('songs-back-btn');
   if (backBtn) backBtn.addEventListener('click', showHome);
-  // Wire play all / shuffle
-  const playAllBtn = document.getElementById('btn-play-all');
-  if (playAllBtn) playAllBtn.addEventListener('click', () => { if (currentChapter) buildPlaylistFromChapter(currentChapter, false); });
-  const shuffleBtn = document.getElementById('btn-shuffle-all');
-  if (shuffleBtn) shuffleBtn.addEventListener('click', () => { if (currentChapter) buildPlaylistFromChapter(currentChapter, true); });
+  var playAll = document.getElementById('btn-play-all');
+  if (playAll) playAll.addEventListener('click', function() { if (currentChapter) buildPlaylistFromChapter(currentChapter, false); });
+  var shuffle = document.getElementById('btn-shuffle-all');
+  if (shuffle) shuffle.addEventListener('click', function() { if (currentChapter) buildPlaylistFromChapter(currentChapter, true); });
 }
 
 function renderChapters() {
   var grid = document.getElementById('chapters-grid');
   if (!grid) return;
   grid.innerHTML = '';
-
   chapters.forEach(function(ch) {
     var card = document.createElement('div');
     card.className = 'chapter-card';
     var icon = ch.icon || '📖';
     var name = ch.name || ch.title || 'Chapter';
-    var songCount = (ch.songs || []).length;
-    card.innerHTML = '<span class="chapter-icon">' + icon + '</span>'
-      + '<h3>' + name + '</h3>'
-      + '<span class="chapter-songs-count">' + songCount + ' episode' + (songCount !== 1 ? 's' : '') + '</span>';
-
-    card.addEventListener('click', function() {
-      try { showSongsView(ch); } catch(err) { console.error('Chapter click error:', err); }
-    });
-
+    var n = (ch.songs || []).length;
+    card.innerHTML = '<span class="chapter-icon">' + icon + '</span><h3>' + name + '</h3><span class="chapter-songs-count">' + n + ' episode' + (n !== 1 ? 's' : '') + '</span>';
+    card.addEventListener('click', function() { showSongsView(ch); });
     grid.appendChild(card);
   });
 }
@@ -208,88 +153,69 @@ function renderChapters() {
 // ─── Play Song ───────────────────────────────────────────────────────────────
 function playSong(i) {
   if (!currentChapter) return;
-  const songs = currentChapter.songs || [];
+  var songs = currentChapter.songs || [];
   if (i < 0 || i >= songs.length) return;
-
   currentSongIndex = i;
-  const song = songs[i];
-
-  // Also set playlist context (but don't overwrite existing playlist unless empty)
+  isPlaylistMode = false;
+  var song = songs[i];
+  // Build temp playlist if empty
   if (playlist.length === 0) {
     buildPlaylistFromChapter(currentChapter, false);
     playlistIndex = i;
   }
-
   loadAndPlay(song, currentChapter.title || currentChapter.name, currentChapter.id);
 }
 
 function loadAndPlay(song, chapterName, chapterId) {
-  if (!audio) {
-    audio = new Audio();
-    audio.addEventListener('ended', onSongEnd);
-    audio.addEventListener('timeupdate', updateProgressBar);
-    audio.addEventListener('loadedmetadata', onMetadataLoaded);
-  }
-
-  // Pause background music when a song starts
-  if (bgMusic && !bgMusic.paused) {
-    bgMusic.pause();
-  }
+  // Pause bg music
+  if (bgMusic && !bgMusic.paused) bgMusic.pause();
 
   audio.src = song.audio || song.url || '';
-  audio.play().catch(() => { /* user gesture required */ });
+  audio.play().catch(function(){});
   isPlaying = true;
 
   updateNowPlaying(song, chapterName);
   updatePlayPauseBtn();
+
+  // Highlight current card
+  document.querySelectorAll('.song-card').forEach(function(c) { c.classList.remove('playing'); });
+  if (!isPlaylistMode) {
+    var sc = document.getElementById('sc-' + currentSongIndex);
+    if (sc) sc.classList.add('playing');
+  }
 }
 
+// ★ BUG FIX: event listeners attached ONCE in boot, not here ★
 function onSongEnd() {
-  // If no more tracks, resume background music
-  if (playlist.length === 0 || playlistIndex >= playlist.length - 1) {
-    if (bgMusic && bgMusicEnabled) bgMusic.play().catch(() => {});
-  }
+  if (!isPlaylistMode && bgMusic && bgMusicEnabled) bgMusic.play().catch(function(){});
   nextTrack();
 }
-
 function onMetadataLoaded() {
-  const durationEl = document.getElementById('np-duration');
-  if (durationEl && audio.duration) {
-    durationEl.textContent = formatTime(audio.duration);
-  }
+  var el = document.getElementById('np-duration');
+  if (el && audio.duration) el.textContent = formatTime(audio.duration);
 }
-
 function updateProgressBar() {
   if (!audio || !audio.duration) return;
-  const pct = (audio.currentTime / audio.duration) * 100;
-  const bar = document.getElementById('np-progress');
+  var pct = (audio.currentTime / audio.duration) * 100;
+  var bar = document.getElementById('np-progress');
   if (bar) bar.style.width = pct + '%';
-
-  const curEl = document.getElementById('np-current-time');
-  if (curEl) curEl.textContent = formatTime(audio.currentTime);
+  var cur = document.getElementById('np-current-time');
+  if (cur) cur.textContent = formatTime(audio.currentTime);
 }
-
 function formatTime(s) {
   if (!s || !isFinite(s)) return '0:00';
-  const m = Math.floor(s / 60);
-  const sec = Math.floor(s % 60);
+  var m = Math.floor(s / 60);
+  var sec = Math.floor(s % 60);
   return m + ':' + (sec < 10 ? '0' : '') + sec;
 }
-
 function updatePlayPauseBtn() {
-  const btn = document.getElementById('np-play-pause');
+  var btn = document.getElementById('np-play-pause');
   if (btn) btn.textContent = isPlaying ? '⏸' : '▶';
 }
-
 function togglePlayPause() {
   if (!audio || !audio.src) return;
-  if (isPlaying) {
-    audio.pause();
-    isPlaying = false;
-  } else {
-    audio.play().catch(() => {});
-    isPlaying = true;
-  }
+  if (isPlaying) { audio.pause(); isPlaying = false; }
+  else { audio.play().catch(function(){}); isPlaying = true; }
   updatePlayPauseBtn();
 }
 
@@ -300,92 +226,61 @@ function updateNowPlaying(song, chapterName) {
   bar.style.display = '';
   bar.classList.add('show');
 
-  var titleEl = document.getElementById('npTitle');
-  if (titleEl) titleEl.textContent = song.title || '';
-
-  var chapterEl = document.getElementById('npSub');
-  if (chapterEl) chapterEl.textContent = chapterName || '';
-
-  var imgEl = document.getElementById('npImg');
-  if (imgEl) {
-    var imgSrc = song.image || song.cover || song.thumbnail || '';
-    if (imgSrc) { imgEl.src = imgSrc; imgEl.style.display = ''; }
-    else { imgEl.style.display = 'none'; }
-  }
-
-  // Play/pause button
-  const ppBtn = document.getElementById('np-play-pause');
-  if (ppBtn && !ppBtn._bound) {
-    ppBtn._bound = true;
-    ppBtn.addEventListener('click', togglePlayPause);
-  }
-
-  // Next / Prev buttons
-  const nextBtn = document.getElementById('np-next');
-  if (nextBtn && !nextBtn._bound) {
-    nextBtn._bound = true;
-    nextBtn.addEventListener('click', nextTrack);
-  }
-  const prevBtn = document.getElementById('np-prev');
-  if (prevBtn && !prevBtn._bound) {
-    prevBtn._bound = true;
-    prevBtn.addEventListener('click', prevTrack);
-  }
-
-  // Progress bar seek
-  const progContainer = document.getElementById('np-progress-bar');
-  if (progContainer && !progContainer._bound) {
-    progContainer._bound = true;
-    progContainer.addEventListener('click', (e) => {
-      if (!audio || !audio.duration) return;
-      const rect = progContainer.getBoundingClientRect();
-      const pct = (e.clientX - rect.left) / rect.width;
-      audio.currentTime = pct * audio.duration;
-    });
-  }
-
-  // Playlist button in now-playing bar
-  const plBtn = document.getElementById('np-playlist-btn');
-  if (plBtn && !plBtn._bound) {
-    plBtn._bound = true;
-    plBtn.addEventListener('click', () => {
-      const panel = document.getElementById('playlist-panel');
-      if (panel && panel.style.display !== 'none') {
-        hidePlaylistPanel();
-      } else {
-        showPlaylistPanel();
-      }
-    });
-  }
-
-  // Background music toggle button
-  const bgBtn = document.getElementById('np-bg-music-btn');
-  if (bgBtn && !bgBtn._bound) {
-    bgBtn._bound = true;
-    bgBtn.addEventListener('click', toggleBgMusic);
+  var t = document.getElementById('npTitle');
+  if (t) t.textContent = song.title || '';
+  var s = document.getElementById('npSub');
+  if (s) s.textContent = chapterName || '';
+  var img = document.getElementById('npImg');
+  if (img) {
+    var src = song.image || song.cover || '';
+    if (src) { img.src = src; img.style.display = ''; }
+    else img.style.display = 'none';
   }
 }
 
-// ─── Playback Controls (Cross-Chapter) ───────────────────────────────────────
+// ★ Bind controls ONCE in boot ★
+function bindNowPlayingControls() {
+  var pp = document.getElementById('np-play-pause');
+  if (pp) pp.addEventListener('click', togglePlayPause);
+  var nx = document.getElementById('np-next');
+  if (nx) nx.addEventListener('click', nextTrack);
+  var pv = document.getElementById('np-prev');
+  if (pv) pv.addEventListener('click', prevTrack);
+  var pc = document.getElementById('np-progress-bar');
+  if (pc) pc.addEventListener('click', function(e) {
+    if (!audio || !audio.duration) return;
+    var rect = pc.getBoundingClientRect();
+    audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
+  });
+  var pl = document.getElementById('np-playlist-btn');
+  if (pl) pl.addEventListener('click', function() {
+    var p = document.getElementById('playlist-panel');
+    if (p && p.style.display !== 'none') hidePlaylistPanel();
+    else showPlaylistPanel();
+  });
+  var bg = document.getElementById('np-bg-music-btn');
+  if (bg) bg.addEventListener('click', toggleBgMusic);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ★ التنقّل بين الفصول (Cross-Chapter) ★
+// ═══════════════════════════════════════════════════════════════════════════════
 function nextTrack() {
   if (isPlaylistMode && playlist.length > 0) {
-    // ← التالي في القائمة
-    const next = playlistIndex + 1;
+    var next = playlistIndex + 1;
     if (next < playlist.length) playSongFromPlaylist(next);
     else playSongFromPlaylist(0);
     return;
   }
-  // ← التالي في الفصل، أو انتقل للفصل اللي بعده
-  if (currentSongIndex + 1 < currentChapter.songs.length) {
+  if (currentChapter && currentSongIndex + 1 < currentChapter.songs.length) {
     playSong(currentSongIndex + 1);
-  } else {
-    // انتقل للفصل التالي
-    const chIdx = chapters.findIndex(c => c.id === currentChapter.id);
-    for (let i = chIdx + 1; i < chapters.length; i++) {
+  } else if (currentChapter) {
+    var chIdx = chapters.findIndex(function(c) { return c.id === currentChapter.id; });
+    for (var i = chIdx + 1; i < chapters.length; i++) {
       if (chapters[i].songs.length > 0) {
         currentChapter = chapters[i];
-        openChapter(currentChapter.id);
-        setTimeout(() => playSong(0), 100);
+        showSongsView(currentChapter);
+        setTimeout(function() { playSong(0); }, 100);
         return;
       }
     }
@@ -394,296 +289,177 @@ function nextTrack() {
 
 function prevTrack() {
   if (isPlaylistMode && playlist.length > 0) {
-    // ← السابق في القائمة
-    const prev = playlistIndex - 1;
+    var prev = playlistIndex - 1;
     if (prev >= 0) playSongFromPlaylist(prev);
     else playSongFromPlaylist(playlist.length - 1);
     return;
   }
-  // ← السابق في الفصل، أو انتقل للفصل اللي قبله
-  if (currentSongIndex > 0) {
+  if (currentChapter && currentSongIndex > 0) {
     playSong(currentSongIndex - 1);
-  } else {
-    // انتقل للفصل السابق (آخر أغنية فيه)
-    const chIdx = chapters.findIndex(c => c.id === currentChapter.id);
-    for (let i = chIdx - 1; i >= 0; i--) {
+  } else if (currentChapter) {
+    var chIdx = chapters.findIndex(function(c) { return c.id === currentChapter.id; });
+    for (var i = chIdx - 1; i >= 0; i--) {
       if (chapters[i].songs.length > 0) {
         currentChapter = chapters[i];
-        openChapter(currentChapter.id);
-        setTimeout(() => playSong(chapters[i].songs.length - 1), 100);
+        showSongsView(currentChapter);
+        var lastIdx = chapters[i].songs.length - 1;
+        (function(idx) { setTimeout(function() { playSong(idx); }, 100); })(lastIdx);
         return;
       }
     }
   }
 }
 
-// فتح فصل وعرض أغانيه
-function openChapter(chapterId) {
-  var ch = chapters.find(c => c.id === chapterId);
-  if (ch) showSongsView(ch);
-}
-
-// ─── Playlist System ─────────────────────────────────────────────────────────
-function addToPlaylist(song, chapterName, chapterId) {
-  const audioUrl = song.audio || song.url || '';
-  const exists = playlist.some(p => (p.audio || p.url) === audioUrl);
-  if (exists) {
+// ═══════════════════════════════════════════════════════════════════════════════
+// ★ قائمة التشغيل (Playlist) ★
+// ═══════════════════════════════════════════════════════════════════════════════
+function addToPlaylistBtn(chapterId, songIdx) {
+  var ch = chapters.find(function(c) { return c.id === chapterId; });
+  if (!ch) return;
+  var song = ch.songs[songIdx];
+  if (!song) return;
+  var audioUrl = song.audio || song.url || '';
+  if (playlist.some(function(s) { return s.audio === audioUrl; })) {
     showToast('Already in playlist');
     return;
   }
-
-  playlist.push({
-    id: song.id || audioUrl,
-    title: song.title,
-    audio: audioUrl,
-    image: song.image || song.cover || '',
-    chapterName: chapterName,
-    chapterId: chapterId
-  });
-
+  playlist.push({ title: song.title, audio: audioUrl, image: song.image || '', chapterName: ch.title || ch.name || '', chapterId: chapterId });
   savePlaylist();
   showToast('Added to playlist ✓');
-
-  // Refresh panel if open
-  const panel = document.getElementById('playlist-panel');
+  var panel = document.getElementById('playlist-panel');
   if (panel && panel.style.display !== 'none') renderPlaylistPanel();
 }
 
 function removeFromPlaylist(index) {
   if (index < 0 || index >= playlist.length) return;
   playlist.splice(index, 1);
-
-  // Adjust playlistIndex
-  if (playlistIndex === index) {
-    // Removed currently playing — stop
-    if (audio) { audio.pause(); audio.src = ''; }
-    isPlaying = false;
-    playlistIndex = -1;
-  } else if (playlistIndex > index) {
-    playlistIndex--;
-  }
-
-  savePlaylist();
-  renderPlaylistPanel();
-  showToast('Removed from playlist');
+  if (playlistIndex === index) { if (audio) { audio.pause(); audio.src = ''; } isPlaying = false; playlistIndex = -1; updatePlayPauseBtn(); }
+  else if (playlistIndex > index) playlistIndex--;
+  savePlaylist(); renderPlaylistPanel(); showToast('Removed');
 }
 
 function clearPlaylist() {
-  playlist = [];
-  playlistIndex = -1;
-  isPlaylistMode = false;
-  savePlaylist();
-  renderPlaylistPanel();
-  showToast('Playlist cleared');
+  playlist = []; playlistIndex = -1; isPlaylistMode = false;
+  savePlaylist(); renderPlaylistPanel(); showToast('Playlist cleared');
 }
 
-// ════════ إضافة أغنية لقائمة التشغيل (زر 📋) ════════
-function addToPlaylistBtn(chapterId, songIdx) {
-  const song = chapters.find(c => c.id === chapterId).songs[songIdx];
-  if (playlist.some(s => s.audio === song.audio)) {
-    showToast('Already in playlist');
-    return; // منع التكرار
-  }
-  playlist.push({ title: song.title, audio: song.audio, image: song.image });
-  savePlaylist();
-  renderPlaylistPanel();
-  showToast('Added to playlist ✓');
-}
-
-// ════════ إعادة ترتيب أغنية في القائمة ════════
 function moveInPlaylist(from, to) {
   if (from < 0 || from >= playlist.length || to < 0 || to >= playlist.length) return;
-  const item = playlist.splice(from, 1)[0];
+  var item = playlist.splice(from, 1)[0];
   playlist.splice(to, 0, item);
-  // تحديث المؤشر
   if (playlistIndex === from) playlistIndex = to;
   else if (from < playlistIndex && to >= playlistIndex) playlistIndex--;
   else if (from > playlistIndex && to <= playlistIndex) playlistIndex++;
-  savePlaylist();
-  renderPlaylistPanel();
+  savePlaylist(); renderPlaylistPanel();
 }
 
 function savePlaylist() {
-  try {
-    PersistDB.savePlaylist(playlist);
-  } catch (e) {
-    // Fallback: save directly to localStorage
-    localStorage.setItem('elfeki_playlist', JSON.stringify(playlist));
-  }
+  try { PersistDB.savePlaylist(playlist); }
+  catch(e) { localStorage.setItem('elfeki_playlist', JSON.stringify(playlist)); }
 }
 
 function buildPlaylistFromChapter(chapter, shuffle) {
-  const songs = chapter.songs || [];
-  if (songs.length === 0) return;
-
-  playlist = songs.map(s => ({
-    id: s.id || s.audio || s.url,
-    title: s.title,
-    audio: s.audio || s.url || '',
-    image: s.image || s.cover || '',
-    chapterName: chapter.title || chapter.name || '',
-    chapterId: chapter.id
-  }));
-
-  if (shuffle) shuffleArray(playlist);
-
-  playlistIndex = 0;
-  savePlaylist();
-  playSongFromPlaylist(0);
-}
-
-function buildPlaylistFromAll(shuffle) {
-  const allSongs = [];
-  chapters.forEach(ch => {
-    (ch.songs || []).forEach(s => {
-      allSongs.push({
-        id: s.id || s.audio || s.url,
-        title: s.title,
-        audio: s.audio || s.url || '',
-        image: s.image || s.cover || '',
-        chapterName: ch.title || ch.name || '',
-        chapterId: ch.id
-      });
-    });
+  var songs = chapter.songs || [];
+  if (!songs.length) return;
+  playlist = songs.map(function(s) {
+    return { id: s.id || s.audio, title: s.title, audio: s.audio || s.url || '', image: s.image || '', chapterName: chapter.title || chapter.name || '', chapterId: chapter.id };
   });
-
-  if (allSongs.length === 0) return;
-
-  playlist = allSongs;
   if (shuffle) shuffleArray(playlist);
-
-  playlistIndex = 0;
-  savePlaylist();
-  playSongFromPlaylist(0);
+  playlistIndex = 0; savePlaylist(); playSongFromPlaylist(0);
 }
 
 function playSongFromPlaylist(index) {
   if (index < 0 || index >= playlist.length) return;
   isPlaylistMode = true;
   playlistIndex = index;
-  const item = playlist[index];
-
+  var item = playlist[index];
   loadAndPlay(item, item.chapterName, item.chapterId);
-
-  // Update active state in panel
-  const panel = document.getElementById('playlist-panel');
+  // Update panel
+  var panel = document.getElementById('playlist-panel');
   if (panel && panel.style.display !== 'none') {
-    panel.querySelectorAll('.pl-item').forEach((el, i) => {
-      el.classList.toggle('active', i === index);
-    });
+    panel.querySelectorAll('.pl-item').forEach(function(el, i) { el.classList.toggle('active', i === index); });
   }
 }
 
 function shuffleArray(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
+  for (var i = arr.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp; }
   return arr;
 }
 
-// ─── Playlist Panel UI ───────────────────────────────────────────────────────
+// ─── Playlist Panel ──────────────────────────────────────────────────────────
 function showPlaylistPanel() {
-  let panel = document.getElementById('playlist-panel');
+  var panel = document.getElementById('playlist-panel');
   if (!panel) {
     panel = document.createElement('div');
     panel.id = 'playlist-panel';
     Object.assign(panel.style, {
-      position: 'fixed', top: '0', right: '0', width: '340px', maxWidth: '90vw',
+      position: 'fixed', top: '0', right: '0', width: '360px', maxWidth: '92vw',
       height: '100vh', background: 'var(--bg, #fff)', color: 'var(--text, #333)',
       boxShadow: '-4px 0 20px rgba(0,0,0,0.15)', zIndex: '9999',
-      overflowY: 'auto', transition: 'transform 0.3s', display: 'flex',
-      flexDirection: 'column'
+      overflowY: 'auto', display: 'flex', flexDirection: 'column'
     });
     document.body.appendChild(panel);
   }
-
-  // Header
-  panel.innerHTML = `
-    <div class="pl-header" style="display:flex;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid var(--border,#eee);position:sticky;top:0;background:inherit;z-index:1;">
-      <h3 style="margin:0;font-size:18px;">Playlist (${playlist.length})</h3>
-      <div style="display:flex;gap:8px;">
-        <button id="pl-clear" title="Clear playlist" style="border:none;background:none;cursor:pointer;font-size:16px;">🗑️</button>
-        <button id="pl-close" title="Close" style="border:none;background:none;cursor:pointer;font-size:20px;">✕</button>
-      </div>
-    </div>
-    <div id="pl-list" style="flex:1;"></div>
-  `;
-
+  panel.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid var(--border,#eee);position:sticky;top:0;background:inherit;z-index:1;">'
+    + '<h3 style="margin:0;font-size:18px;">Playlist (' + playlist.length + ')</h3>'
+    + '<div style="display:flex;gap:8px;"><button id="pl-clear" style="border:none;background:none;cursor:pointer;font-size:16px;">🗑️</button>'
+    + '<button id="pl-close" style="border:none;background:none;cursor:pointer;font-size:20px;">✕</button></div></div>'
+    + '<div id="pl-list" style="flex:1;"></div>';
   document.getElementById('pl-close').addEventListener('click', hidePlaylistPanel);
   document.getElementById('pl-clear').addEventListener('click', clearPlaylist);
-
   renderPlaylistPanel();
-
-  // Animate in
-  requestAnimationFrame(() => {
-    panel.style.transform = 'translateX(0)';
-  });
   panel.style.display = 'flex';
 
-  // Backdrop
-  let backdrop = document.getElementById('pl-backdrop');
-  if (!backdrop) {
-    backdrop = document.createElement('div');
-    backdrop.id = 'pl-backdrop';
-    Object.assign(backdrop.style, {
-      position: 'fixed', top: '0', left: '0', width: '100%', height: '100%',
-      background: 'rgba(0,0,0,0.4)', zIndex: '9998', display: 'none'
-    });
-    backdrop.addEventListener('click', hidePlaylistPanel);
-    document.body.appendChild(backdrop);
+  var bd = document.getElementById('pl-backdrop');
+  if (!bd) {
+    bd = document.createElement('div');
+    bd.id = 'pl-backdrop';
+    Object.assign(bd.style, { position: 'fixed', top: '0', left: '0', width: '100%', height: '100%', background: 'rgba(0,0,0,0.4)', zIndex: '9998', display: 'none' });
+    bd.addEventListener('click', hidePlaylistPanel);
+    document.body.appendChild(bd);
   }
-  backdrop.style.display = 'block';
+  bd.style.display = 'block';
 }
 
 function hidePlaylistPanel() {
-  const panel = document.getElementById('playlist-panel');
-  if (panel) panel.style.display = 'none';
-  const backdrop = document.getElementById('pl-backdrop');
-  if (backdrop) backdrop.style.display = 'none';
+  var p = document.getElementById('playlist-panel');
+  if (p) p.style.display = 'none';
+  var bd = document.getElementById('pl-backdrop');
+  if (bd) bd.style.display = 'none';
 }
 
 function renderPlaylistPanel() {
-  const list = document.getElementById('pl-list');
+  var list = document.getElementById('pl-list');
   if (!list) return;
-
   if (playlist.length === 0) {
-    list.innerHTML = '<p style="text-align:center;color:var(--text-secondary,#999);padding:40px 20px;">Playlist is empty.<br>Add songs from any chapter!</p>';
+    list.innerHTML = '<p style="text-align:center;color:var(--text-secondary,#999);padding:40px 20px;">Playlist is empty</p>';
     return;
   }
-
   list.innerHTML = '';
-  playlist.forEach((item, i) => {
-    const el = document.createElement('div');
+  playlist.forEach(function(item, i) {
+    var el = document.createElement('div');
     el.className = 'pl-item' + (i === playlistIndex ? ' active' : '');
     Object.assign(el.style, {
-      display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px',
+      display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px',
       cursor: 'pointer', borderBottom: '1px solid var(--border,#eee)',
-      background: i === playlistIndex ? 'var(--accent-light, #6c5ce720)' : 'transparent',
-      transition: 'background 0.15s'
+      background: i === playlistIndex ? 'var(--accent-light, #6c5ce720)' : 'transparent'
     });
 
-    el.innerHTML = `
-      <span class="pl-item-num" style="font-size:12px;color:var(--text-secondary,#999);min-width:24px;">${i + 1}</span>
-      <div class="pl-item-info" style="flex:1;min-width:0;">
-        <div class="pl-item-title" style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.title}</div>
-        <div class="pl-item-chapter" style="font-size:12px;color:var(--text-secondary,#999);">${item.chapterName}</div>
-      </div>
-      <button class="pl-item-remove" title="Remove" style="border:none;background:none;cursor:pointer;font-size:14px;opacity:0.5;transition:opacity 0.15s;">✕</button>
-    `;
+    var reorderUp = (i > 0) ? '<button class="pl-up" style="border:none;background:none;cursor:pointer;font-size:10px;padding:0;line-height:1;">▲</button>' : '<span style="font-size:10px;opacity:0.2;">▲</span>';
+    var reorderDown = (i < playlist.length - 1) ? '<button class="pl-down" style="border:none;background:none;cursor:pointer;font-size:10px;padding:0;line-height:1;">▼</button>' : '<span style="font-size:10px;opacity:0.2;">▼</span>';
 
-    // Click to play
-    el.querySelector('.pl-item-info').addEventListener('click', () => playSongFromPlaylist(i));
+    el.innerHTML = '<span style="font-size:12px;color:var(--text-secondary,#999);min-width:20px;">' + (i + 1) + '</span>'
+      + '<div style="display:flex;flex-direction:column;gap:2px;">' + reorderUp + reorderDown + '</div>'
+      + '<div class="pl-info" style="flex:1;min-width:0;"><div style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + item.title + '</div>'
+      + '<div style="font-size:12px;color:var(--text-secondary,#999);">' + (item.chapterName || '') + '</div></div>'
+      + '<button class="pl-rm" style="border:none;background:none;cursor:pointer;font-size:14px;opacity:0.5;">✕</button>';
 
-    // Remove button
-    el.querySelector('.pl-item-remove').addEventListener('click', (e) => {
-      e.stopPropagation();
-      removeFromPlaylist(i);
-    });
-
-    // Hover effect
-    el.addEventListener('mouseenter', () => { el.style.background = i === playlistIndex ? 'var(--accent-light, #6c5ce720)' : 'var(--hover-bg, #f5f5f5)'; });
-    el.addEventListener('mouseleave', () => { el.style.background = i === playlistIndex ? 'var(--accent-light, #6c5ce720)' : 'transparent'; });
+    el.querySelector('.pl-info').addEventListener('click', function() { playSongFromPlaylist(i); });
+    el.querySelector('.pl-rm').addEventListener('click', function(e) { e.stopPropagation(); removeFromPlaylist(i); });
+    var upBtn = el.querySelector('.pl-up');
+    var downBtn = el.querySelector('.pl-down');
+    if (upBtn && i > 0) upBtn.addEventListener('click', function(e) { e.stopPropagation(); moveInPlaylist(i, i - 1); });
+    if (downBtn && i < playlist.length - 1) downBtn.addEventListener('click', function(e) { e.stopPropagation(); moveInPlaylist(i, i + 1); });
 
     list.appendChild(el);
   });
@@ -691,193 +467,86 @@ function renderPlaylistPanel() {
 
 // ─── Background Music ────────────────────────────────────────────────────────
 function initBgMusic() {
-  const saved = localStorage.getItem('elfeki_bg_music_enabled');
-  bgMusicEnabled = saved !== 'false'; // default true
-
+  var saved = localStorage.getItem('elfeki_bg_music_enabled');
+  bgMusicEnabled = saved !== 'false';
   bgMusic = new Audio('default-music.mp3');
-  bgMusic.loop = true;
-  bgMusic.volume = 0.15;
-
-  // Auto-play background music immediately
+  bgMusic.loop = true; bgMusic.volume = 0.15;
   if (bgMusicEnabled) {
-    bgMusic.play().catch(() => {
-      // Fallback: play on first user interaction if autoplay blocked
-      const tryPlayBg = () => {
-        if (bgMusicEnabled && bgMusic.paused) {
-          bgMusic.play().catch(() => {});
-        }
-        document.removeEventListener('click', tryPlayBg);
-        document.removeEventListener('touchstart', tryPlayBg);
+    bgMusic.play().catch(function() {
+      var handler = function() {
+        if (bgMusicEnabled && bgMusic.paused) bgMusic.play().catch(function(){});
+        document.removeEventListener('click', handler);
+        document.removeEventListener('touchstart', handler);
       };
-      document.addEventListener('click', tryPlayBg, { once: true });
-      document.addEventListener('touchstart', tryPlayBg, { once: true });
+      document.addEventListener('click', handler, { once: true });
+      document.addEventListener('touchstart', handler, { once: true });
     });
   }
-
   updateBgMusicBtn();
 }
-
 function toggleBgMusic() {
   bgMusicEnabled = !bgMusicEnabled;
   localStorage.setItem('elfeki_bg_music_enabled', bgMusicEnabled);
-
-  if (bgMusicEnabled && bgMusic) {
-    bgMusic.play().catch(() => {});
-    showToast('Background music on');
-  } else if (bgMusic) {
-    bgMusic.pause();
-    showToast('Background music off');
-  }
-
+  if (bgMusicEnabled && bgMusic) { bgMusic.play().catch(function(){}); showToast('Background music on'); }
+  else if (bgMusic) { bgMusic.pause(); showToast('Background music off'); }
   updateBgMusicBtn();
 }
-
-function setBgMusicVolume(vol) {
-  if (bgMusic) bgMusic.volume = Math.max(0, Math.min(1, vol));
-  localStorage.setItem('elfeki_bg_music_volume', vol);
-}
-
 function updateBgMusicBtn() {
-  const btn = document.getElementById('np-bg-music-btn');
-  if (btn) {
-    btn.textContent = bgMusicEnabled ? '🎵' : '🔇';
-    btn.title = bgMusicEnabled ? 'Mute background music' : 'Play background music';
-  }
+  var btn = document.getElementById('np-bg-music-btn');
+  if (btn) { btn.textContent = bgMusicEnabled ? '🎵' : '🔇'; }
 }
 
 // ─── Scroll Animations ──────────────────────────────────────────────────────
 function initScrollAnimations() {
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
-
-  document.querySelectorAll('.chapter-card, .feature-card, .animate-on-scroll').forEach(el => {
-    el.classList.add('scroll-hidden');
-    observer.observe(el);
-  });
+  var obs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.chapter-card,.feature-card,.animate-on-scroll').forEach(function(el) { el.classList.add('scroll-hidden'); obs.observe(el); });
 }
 
-// ─── Cookie Consent ──────────────────────────────────────────────────────────
+// ─── Cookie ──────────────────────────────────────────────────────────────────
 function initCookieBanner() {
   if (localStorage.getItem('elfeki_cookies_accepted')) return;
-
-  const banner = document.createElement('div');
-  banner.id = 'cookie-banner';
-  Object.assign(banner.style, {
-    position: 'fixed', bottom: '0', left: '0', right: '0',
-    background: 'var(--bg-overlay, #2d3436)', color: '#fff',
-    padding: '16px 24px', display: 'flex', alignItems: 'center',
-    justifyContent: 'space-between', gap: '16px', zIndex: '9000',
-    flexWrap: 'wrap', fontSize: '14px'
-  });
-  banner.innerHTML = `
-    <span>We use cookies to improve your experience. By continuing, you agree to our cookie policy.</span>
-    <button id="cookie-accept" style="background:var(--accent,#6c5ce7);color:#fff;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-weight:600;white-space:nowrap;">Accept</button>
-  `;
-  document.body.appendChild(banner);
-
-  document.getElementById('cookie-accept').addEventListener('click', () => {
-    localStorage.setItem('elfeki_cookies_accepted', '1');
-    banner.remove();
-  });
+  var b = document.createElement('div');
+  Object.assign(b.style, { position: 'fixed', bottom: '0', left: '0', right: '0', background: '#2d3436', color: '#fff', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', zIndex: '9000', flexWrap: 'wrap', fontSize: '14px' });
+  b.innerHTML = '<span>We use cookies to improve your experience.</span><button id="c-accept" style="background:var(--accent,#6c5ce7);color:#fff;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-weight:600;">Accept</button>';
+  document.body.appendChild(b);
+  document.getElementById('c-accept').addEventListener('click', function() { localStorage.setItem('elfeki_cookies_accepted', '1'); b.remove(); });
 }
 
-// ─── Ads ─────────────────────────────────────────────────────────────────────
 function initAds() {
-  const adSlots = document.querySelectorAll('.ad-slot');
-  adSlots.forEach(slot => {
-    // In production, replace with real ad network code
-    // For now, hide empty ad slots gracefully
-    if (!slot.querySelector('iframe') && !slot.querySelector('img')) {
-      slot.style.display = 'none';
-    }
-  });
+  document.querySelectorAll('.ad-slot').forEach(function(s) { if (!s.querySelector('iframe') && !s.querySelector('img')) s.style.display = 'none'; });
 }
 
 // ─── Boot ────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', async () => {
-  try {
-    await PersistDB.init();
-  } catch (e) {
-    console.warn('PersistDB init failed, using fallback:', e);
-  }
+document.addEventListener('DOMContentLoaded', async function() {
+  try { await PersistDB.init(); } catch(e) {}
 
-  let loaded = false;
-
-  // 1) Read from live Vercel API first
-  try {
-    const res = await fetch('/api/data?action=read&t=' + Date.now());
-    if (res.ok) {
-      const apiData = await res.json();
-      if (apiData && Array.isArray(apiData.chapters) && apiData.chapters.length > 0) {
-        chapters = apiData.chapters;
-        PersistDB._chapters = apiData.chapters;
-        PersistDB._nextId = apiData.settings?.nextId || { chapter: 7, song: 31 };
-        PersistDB._admin = apiData.settings?.admin || { email: '', password: '' };
-        PersistDB._save();
-        loaded = true;
-        console.log('Loaded chapters from /api/data');
-      }
-    }
-  } catch (e) {
-    console.warn('API load failed:', e);
-  }
-
-  // 2) Fallback to local persisted storage
-  if (!loaded) {
-    try {
-      chapters = PersistDB.getChapters() || [];
-      if (chapters.length > 0) {
-        loaded = true;
-        console.log('Loaded chapters from PersistDB');
-      }
-    } catch (e) {
-      console.warn('PersistDB fallback failed:', e);
-    }
-  }
-
-  // 3) Final fallback to static data.json
-  if (!loaded) {
-    try {
-      const resp = await fetch('data.json?t=' + Date.now());
-      if (resp.ok) {
-        const serverData = await resp.json();
-        if (serverData && Array.isArray(serverData.chapters)) {
-          chapters = serverData.chapters;
-          PersistDB._chapters = serverData.chapters;
-          PersistDB._nextId = serverData.nextId || { chapter: 7, song: 31 };
-          PersistDB._admin = serverData.admin || { email: '', password: '' };
-          PersistDB._save();
-          loaded = true;
-          console.log('Loaded chapters from data.json fallback');
-        }
-      }
-    } catch (e) {
-      console.warn('data.json fallback failed:', e);
-    }
-  }
-
-  if (!loaded) {
-    chapters = [];
-  }
+  var loaded = false;
 
   try {
-    playlist = PersistDB.getPlaylist() || [];
-  } catch (e) {
-    console.warn('Failed to load playlist:', e);
+    var res = await fetch('/api/data?action=read&t=' + Date.now());
+    if (res.ok) { var d = await res.json(); if (d && d.chapters && d.chapters.length) { chapters = d.chapters; loaded = true; } }
+  } catch(e) {}
+
+  if (!loaded) { try { chapters = PersistDB.getChapters() || []; if (chapters.length) loaded = true; } catch(e) {} }
+
+  if (!loaded) {
     try {
-      playlist = JSON.parse(localStorage.getItem('elfeki_playlist') || '[]');
-    } catch (_) {
-      playlist = [];
-    }
+      var resp = await fetch('data.json?t=' + Date.now());
+      if (resp.ok) { var sd = await resp.json(); if (sd && sd.chapters) { chapters = sd.chapters; loaded = true; } }
+    } catch(e) {}
   }
 
+  if (!loaded) chapters = [];
+
+  try { playlist = PersistDB.getPlaylist() || []; } catch(e) { try { playlist = JSON.parse(localStorage.getItem('elfeki_playlist') || '[]'); } catch(_) { playlist = []; } }
+
+  // ★ FIX: get audio element + attach listeners HERE (not in loadAndPlay) ★
   audio = document.getElementById('player');
+  audio.addEventListener('ended', onSongEnd);
+  audio.addEventListener('timeupdate', updateProgressBar);
+  audio.addEventListener('loadedmetadata', onMetadataLoaded);
 
   initTheme();
   initNav();
@@ -886,53 +555,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   initCookieBanner();
   initAds();
   initBgMusic();
-
-  // Ensure now-playing bar exists with controls
-  ensureNowPlayingBar();
-
+  bindNowPlayingControls();
   renderChapters();
 
-  // Update hero stats
   try {
-    const chEl = document.getElementById('chCount');
-    const epEl = document.getElementById('epCount');
+    var chEl = document.getElementById('chCount');
+    var epEl = document.getElementById('epCount');
     if (chEl) chEl.textContent = chapters.length;
-    if (epEl) epEl.textContent = chapters.reduce((s, c) => s + ((c.songs || []).length), 0);
+    if (epEl) epEl.textContent = chapters.reduce(function(s, c) { return s + (c.songs || []).length; }, 0);
   } catch(e) {}
 });
-
-// ─── Ensure Now Playing Bar Has All Controls ─────────────────────────────────
-function ensureNowPlayingBar() {
-  const bar = document.getElementById('now-playing');
-  if (!bar) return;
-
-  // Inject controls if missing
-  if (!document.getElementById('np-play-pause')) {
-    const controls = bar.querySelector('.np-controls');
-    if (controls) {
-      controls.innerHTML = `
-        <button id="np-prev" class="np-btn" title="Previous">⏮</button>
-        <button id="np-play-pause" class="np-btn" title="Play/Pause">▶</button>
-        <button id="np-next" class="np-btn" title="Next">⏭</button>
-        <button id="np-playlist-btn" class="np-btn" title="Playlist">📋</button>
-        <button id="np-bg-music-btn" class="np-btn" title="Background music">🎵</button>
-      `;
-    }
-  }
-
-  // Progress bar
-  if (!document.getElementById('np-progress-bar')) {
-    const progWrap = bar.querySelector('.np-progress-wrap');
-    if (progWrap) {
-      progWrap.innerHTML = `
-        <div id="np-progress-bar" style="width:100%;height:6px;background:var(--border,#ddd);border-radius:3px;cursor:pointer;position:relative;">
-          <div id="np-progress" style="width:0%;height:100%;background:var(--accent,#6c5ce7);border-radius:3px;transition:width 0.1s linear;"></div>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-secondary,#999);margin-top:4px;">
-          <span id="np-current-time">0:00</span>
-          <span id="np-duration">0:00</span>
-        </div>
-      `;
-    }
-  }
-}
