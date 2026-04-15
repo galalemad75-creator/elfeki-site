@@ -160,7 +160,14 @@ function playCourse(chapterId,songIndex){
   localStorage.setItem('ef_recent',JSON.stringify(recentlyPlayed));
   document.getElementById('player-title').textContent=ep.title;
   document.getElementById('player-artist').textContent='Dr. Ibrahim El-Feki · '+ch.name;
-  document.getElementById('player-thumb').textContent=ch.icon||'📚';
+
+  // Show cover image in player thumb (not emoji)
+  const thumb = document.getElementById('player-thumb');
+  if(ep.image){
+    thumb.innerHTML = `<img src="${ep.image}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" alt="cover">`;
+  } else {
+    thumb.innerHTML = ch.icon || '📚';
+  }
 
   // Show cover image as full background
   setCoverBackground(ep.image || '');
