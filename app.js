@@ -13,6 +13,10 @@ let isShuffle = false;
 let repeatMode = 0;
 let currentPlaylistId = null;
 
+// ── Real Audio Player ──
+const playerAudio = new Audio();
+playerAudio.volume = 0.7;
+
 const COURSE_COLORS = ['#1DB954','#e91e63','#ff9800','#9c27b0','#ffc107','#03a9f4','#4caf50','#f44336'];
 
 function parseDuration(s){if(!s)return 0;const p=s.split(':').map(Number);return p.length===3?p[0]*3600+p[1]*60+p[2]:(p[0]||0)*60+(p[1]||0);}
@@ -137,8 +141,28 @@ function playCourse(chapterId,songIndex){
   isPlaying=true;document.getElementById('play-pause-btn').textContent='⏸';
   document.querySelectorAll('.track-row').forEach(r=>r.classList.remove('playing'));
   document.querySelectorAll(`[data-ep-id="${ep.id}"]`).forEach(r=>r.classList.add('playing'));
-  simulatePlayback(2700); // simulate ~45 min
-  // Save play count via DB (Supabase + GitHub backup)
+
+  // ── REAL AUDIO PLAYBACK ──
+  const audioUrl = ep.audio || '';
+  if(audioUrl){
+    playerAudio.src = audioUrl;
+    playerAudio.play().then(()=>{
+      isPlaying=true;
+      document.getElementById('play-pause-btn').textContent='⏸';
+      startProgressTracker();
+    }).catch(e=>{
+      console.warn('Audio play failed:', e);
+      toast('Cannot play audio — try again');
+      isPlaying=false;
+      document.getElementById('play-pause-btn').textContent='▶';
+    });
+  } else {
+    // No audio URL — simulate fallback
+    simulatePlayback(180);
+    toast('No audio file for this episode');
+  }
+
+  // Save play count via DB (Supabase)
   if(typeof DB !== 'undefined' && DB.save){
     const song = ch.songs[songIndex];
     if(song) song.plays = (song.plays || 0) + 1;
@@ -146,6 +170,30 @@ function playCourse(chapterId,songIndex){
   }
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
 }
+
+// Real-time progress tracker using actual audio element
+let progressRAF = null;
+function startProgressTracker(){
+  cancelAnimationFrame(progressRAF);
+  function update(){
+    if(!playerAudio.paused && playerAudio.duration){
+      const pct = (playerAudio.currentTime / playerAudio.duration) * 100;
+      document.getElementById('progress-fill').style.width = pct + '%';
+      document.getElementById('time-current').textContent = formatTime(playerAudio.currentTime);
+      document.getElementById('time-total').textContent = formatTime(playerAudio.duration);
+    }
+    progressRAF = requestAnimationFrame(update);
+  }
+  update();
+}
+
+// When audio ends, play next
+playerAudio.addEventListener('ended', ()=>{
+  playNext();
+});
+playerAudio.addEventListener('loadedmetadata', ()=>{
+  document.getElementById('time-total').textContent = formatTime(playerAudio.duration);
+});
 function playCourseFromStart(){if(currentChapterId!=null)playCourse(currentChapterId,0);}
 function playNext(){
   if(currentChapterId==null)return;const ch=CHAPTERS.find(c=>c.id==currentChapterId);if(!ch)return;
@@ -156,22 +204,36 @@ function playNext(){
   playCourse(currentChapterId,next);
 }
 function playPrev(){
-  if(currentChapterId==null)return;if(simTime>3){simTime=0;return;}
+  if(currentChapterId==null)return;
+  // If more than 3 seconds in, restart current track
+  if(playerAudio.currentTime > 3){playerAudio.currentTime=0;return;}
   const ch=CHAPTERS.find(c=>c.id==currentChapterId);if(!ch)return;
   let prev=currentSongIndex-1;if(prev<0)prev=ch.songs.length-1;
   playCourse(currentChapterId,prev);
 }
-function togglePlayPause(){isPlaying=!isPlaying;document.getElementById('play-pause-btn').textContent=isPlaying?'⏸':'▶';}
+function togglePlayPause(){
+  isPlaying=!isPlaying;
+  document.getElementById('play-pause-btn').textContent=isPlaying?'⏸':'▶';
+  if(isPlaying){playerAudio.play().catch(()=>{});}
+  else{playerAudio.pause();}
+}
 function toggleShuffle(){isShuffle=!isShuffle;document.getElementById('shuffle-btn').classList.toggle('active',isShuffle);toast(isShuffle?'Shuffle on':'Shuffle off');}
 function toggleRepeat(){repeatMode=(repeatMode+1)%3;const b=document.getElementById('repeat-btn');b.classList.toggle('active',repeatMode>0);b.textContent=repeatMode===2?'🔂':'🔁';toast(['Repeat off','Repeat all','Repeat one'][repeatMode]);}
 function shuffleCourse(){isShuffle=true;document.getElementById('shuffle-btn').classList.add('active');playCourseFromStart();toast('Shuffle on');}
 
+// Fallback simulation (used only if no audio URL)
 let simTime=0,simTotal=0,simInterval=null;
 function simulatePlayback(totalSec){clearInterval(simInterval);simTime=0;simTotal=totalSec;updateProgressUI();simInterval=setInterval(()=>{if(!isPlaying)return;simTime++;updateProgressUI();if(simTime>=simTotal){clearInterval(simInterval);playNext();}},1000);}
 function updateProgressUI(){document.getElementById('time-current').textContent=formatTime(simTime);document.getElementById('time-total').textContent=formatTime(simTotal);const pct=simTotal>0?(simTime/simTotal*100):0;document.getElementById('progress-fill').style.width=pct+'%';}
-function seekTo(e){const bar=document.getElementById('progress-bar');const rect=bar.getBoundingClientRect();simTime=Math.floor(Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width))*simTotal);updateProgressUI();}
-function setVolume(val){document.getElementById('vol-icon').textContent=val==0?'🔇':val<50?'🔉':'🔊';}
-function toggleMute(){const s=document.getElementById('volume-slider');if(s.value>0){s.dataset.prev=s.value;s.value=0;}else{s.value=s.dataset.prev||70;}setVolume(s.value);}
+
+function seekTo(e){
+  const bar=document.getElementById('progress-bar');const rect=bar.getBoundingClientRect();
+  const pct=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
+  if(playerAudio.duration){playerAudio.currentTime=pct*playerAudio.duration;}
+  else{simTime=Math.floor(pct*simTotal);updateProgressUI();}
+}
+function setVolume(val){playerAudio.volume=val/100;document.getElementById('vol-icon').textContent=val==0?'🔇':val<50?'🔉':'🔊';}
+function toggleMute(){const s=document.getElementById('volume-slider');if(s.value>0){s.dataset.prev=s.value;s.value=0;playerAudio.volume=0;}else{s.value=s.dataset.prev||70;playerAudio.volume=s.value/100;}setVolume(s.value);}
 
 // ── Likes ──
 function toggleLike(epId){
